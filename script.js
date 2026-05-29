@@ -15,9 +15,7 @@ carregarCuponsCliente();
 
 function atualizarBotaoLogin(){
   const botaoLogin = document.querySelector('button[onclick="abrirLogin()"]');
-
   if(!botaoLogin) return;
-
   botaoLogin.innerHTML = clienteLogado ? "✅ Logado" : "Entrar / Cadastrar";
 }
 
@@ -145,6 +143,7 @@ async function carregarCuponsCliente(){
 
     div.innerHTML = `
       <strong>${cupom.codigo}</strong>
+
       <span>
         ${
           cupom.tipo === "porcentagem"
@@ -152,6 +151,14 @@ async function carregarCuponsCliente(){
           : `R$ ${Number(cupom.valor).toFixed(2).replace(".", ",")} OFF`
         }
       </span>
+
+      <button
+        class="botao"
+        style="margin-top:10px;width:100%;"
+        onclick="aplicarCupomAutomatico('${cupom.codigo}')"
+      >
+        Usar Cupom
+      </button>
     `;
 
     lista.appendChild(div);
@@ -190,6 +197,16 @@ async function aplicarCupom(){
     `Cupom aplicado: ${data.codigo}`;
 
   atualizarCarrinho();
+}
+
+async function aplicarCupomAutomatico(codigoCupom){
+  const campo = document.getElementById("campoCupom");
+
+  if(campo){
+    campo.value = codigoCupom;
+  }
+
+  await aplicarCupom();
 }
 
 function calcularTotalComCupom(total){
