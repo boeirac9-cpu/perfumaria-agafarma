@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importador Trier</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+body{
+  font-family:Arial;
+  max-width:1000px;
+  margin:auto;
+  padding:30px;
+  background:#f7f7f7;
+}
+
+.caixa{
+  background:white;
+  padding:24px;
+  border-radius:14px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+button{
+  padding:12px 20px;
+  margin:6px 4px;
+  cursor:pointer;
+  border:none;
+  border-radius:8px;
+  background:#0057b8;
+  color:white;
+  font-weight:bold;
+}
+
+button.perigo{
+  background:#d62828;
+}
+
+input{
+  padding:10px;
+  background:white;
+  border:1px solid #ccc;
+  border-radius:8px;
+}
+
+#resultado{
+  margin-top:20px;
+  font-weight:bold;
+}
+
+.produto-preview{
+  background:#fff;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+</style>
+</head>
+<body>
+
+<div class="caixa">
+
+  <h1>Importador Trier</h1>
+
+  <p>
+    Selecione o XLS exportado da Trier para cadastrar ou atualizar produtos.
+  </p>
+
+  <input type="file" id="arquivoXLS" accept=".xls,.xlsx">
+
+  <br><br>
+
+  <button onclick="lerArquivo()">
+    Ler XLS
+  </button>
+
+  <button onclick="importarProdutos(10)">
+    Importar teste 10 produtos
+  </button>
+
+  <button onclick="importarProdutos('todos')" class="perigo">
+    Importar / Atualizar todos
+  </button>
+
+  <br><br>
+
+  <a href="admin.html">
+    Voltar para o Admin
+  </a>
+
+  <div id="resultado"></div>
+
+  <h2>Prévia dos produtos encontrados</h2>
+  <div id="previewProdutos"></div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://bohfiydxvnqqtzxoaddf.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_P9eKigJblG47ArdcyYB-ZA_xWvaUlbM";
+
+const supabaseClient =
+supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+</script>
+
+<script src="importar-trier.js"></script>
+
+</body>
+</html>

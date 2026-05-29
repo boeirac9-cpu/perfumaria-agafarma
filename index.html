@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfumaria Agafarma</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <button class="menu-btn" onclick="abrirMenu()">☰</button>
+
+  <div class="logo">AGAFARMA LAGOA VERMELHA</div>
+
+  <button class="carrinho-btn" onclick="abrirLogin()">
+    Entrar / Cadastrar
+  </button>
+
+  <button class="carrinho-btn">
+    🛒 Carrinho <span id="contador">0</span>
+  </button>
+</header>
+
+<aside class="menu-lateral" id="menuLateral">
+  <button class="fechar-menu" onclick="fecharMenu()">×</button>
+
+  <h2>Categorias</h2>
+
+  <a href="admin.html" class="admin-escondido">
+    Área administrativa
+  </a>
+
+  <button onclick="filtrarCategoria('todos')">Todos</button>
+  <button onclick="filtrarCategoria('cabelo')">Cabelo</button>
+  <button onclick="filtrarCategoria('corpo')">Corpo</button>
+  <button onclick="filtrarCategoria('rosto')">Rosto</button>
+  <button onclick="filtrarCategoria('perfumes')">Perfumes</button>
+  <button onclick="filtrarCategoria('oleos')">Óleos</button>
+  <button onclick="filtrarCategoria('higiene')">Higiene</button>
+  <button onclick="filtrarCategoria('infantil')">Infantil</button>
+  <button onclick="filtrarCategoria('skincare')">Skincare</button>
+  <button onclick="filtrarCategoria('maquiagem')">Maquiagem</button>
+  <button onclick="filtrarPromocoes()">Promoções</button>
+</aside>
+
+<section class="hero">
+  <h1>Perfumaria Agafarma</h1>
+  <p>Beleza, cuidado e bem-estar com um toque premium.</p>
+
+  <div class="pesquisa">
+    <input
+      type="text"
+      id="campoPesquisa"
+      placeholder="Pesquisar produto..."
+      onkeyup="pesquisarProduto()"
+    >
+  </div>
+</section>
+
+<section class="faixa-info">
+  <button class="card-promo" onclick="filtrarPromocoes()">
+    🔥 PROMOÇÕES
+  </button>
+
+  <div class="card-horario">
+    <h3>Horário de funcionamento</h3>
+    <p><strong>Segunda a sábado:</strong> das 7:30 às 22:00</p>
+    <p><strong>Domingo:</strong> das 9:00 às 12:00 e das 16:00 às 20:00</p>
+  </div>
+</section>
+
+<section class="cupons-cliente">
+  <h2>🎁 Cupons disponíveis</h2>
+  <div id="listaCuponsCliente"></div>
+</section>
+
+<section class="filtros">
+  <button onclick="filtrarCategoria('todos')">Todos</button>
+  <button onclick="filtrarCategoria('cabelo')">Cabelo</button>
+  <button onclick="filtrarCategoria('corpo')">Corpo</button>
+  <button onclick="filtrarCategoria('perfumes')">Perfumes</button>
+  <button onclick="filtrarCategoria('skincare')">Skincare</button>
+  <button onclick="filtrarCategoria('maquiagem')">Maquiagem</button>
+  <button onclick="filtrarPromocoes()">Promoções</button>
+</section>
+
+<section class="produtos" id="listaProdutos"></section>
+
+<div class="carrinho-lateral">
+  <h2>Meu Carrinho</h2>
+
+  <div id="itensCarrinho"></div>
+
+  <div class="cupom-area">
+    <input type="text" id="campoCupom" placeholder="Digite seu cupom">
+    <button onclick="aplicarCupom()">Aplicar</button>
+  </div>
+
+  <p id="cupomAplicado"></p>
+
+  <div class="total">
+    Total: R$ <span id="totalCarrinho">0,00</span>
+  </div>
+
+  <button class="botao finalizar" onclick="abrirFinalizacao()">
+    Finalizar Pedido
+  </button>
+</div>
+
+<div class="modal-finalizacao" id="modalFinalizacao">
+  <div class="finalizacao-caixa">
+    <button class="fechar-finalizacao" onclick="fecharFinalizacao()">×</button>
+
+    <h2>Finalizar Pedido</h2>
+
+    <label>Nome completo</label>
+    <input type="text" id="nomeCliente" placeholder="Digite seu nome">
+
+    <label>Como deseja receber?</label>
+    <select id="tipoEntrega" onchange="mostrarEndereco()">
+      <option value="retirada">Retirar na farmácia</option>
+      <option value="tele">Pedir tele-entrega</option>
+    </select>
+
+    <div id="camposEndereco" class="campos-endereco">
+      <label>Endereço</label>
+      <input type="text" id="endereco" placeholder="Rua / Avenida">
+
+      <label>Número</label>
+      <input type="text" id="numero" placeholder="Número da casa">
+
+      <label>Bairro</label>
+      <input type="text" id="bairro" placeholder="Bairro">
+
+      <label>Ponto de referência</label>
+      <input type="text" id="referencia" placeholder="Ex: perto da praça">
+
+      <label>Celular</label>
+      <input type="text" id="celular" placeholder="Seu WhatsApp">
+    </div>
+
+    <label>Forma de pagamento</label>
+    <select id="pagamento">
+      <option value="Pix">Pix</option>
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Cartão na entrega">Cartão na entrega</option>
+      <option value="Cartão na farmácia">Cartão na farmácia</option>
+    </select>
+
+    <label>Observações</label>
+    <textarea id="observacoes" placeholder="Alguma observação sobre o pedido?"></textarea>
+
+    <button class="botao confirmar" onclick="enviarPedido()">
+      Confirmar Pedido
+    </button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://bohfiydxvnqqtzxoaddf.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_P9eKigJblG47ArdcyYB-ZA_xWvaUlbM";
+
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+</script>
+
+<script src="script.js"></script>
+
+</body>
+</html>

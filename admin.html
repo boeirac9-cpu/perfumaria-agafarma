@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Perfumaria Agafarma</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="admin-login" id="telaLoginAdmin">
+  <div class="finalizacao-caixa">
+    <h2>Login Administrativo</h2>
+
+    <label>Email</label>
+    <input type="email" id="adminEmail" placeholder="Email do administrador">
+
+    <label>Senha</label>
+    <input type="password" id="adminSenha" placeholder="Senha">
+
+    <button class="botao confirmar" onclick="loginAdmin()">
+      Entrar
+    </button>
+  </div>
+</section>
+
+<div id="painelAdmin" style="display:none;">
+
+<header>
+  <div class="logo">ADMIN AGAFARMA</div>
+
+  <button class="carrinho-btn" onclick="sairAdmin()">
+    Sair
+  </button>
+
+  <a href="index.html" class="carrinho-btn">
+    Voltar para loja
+  </a>
+</header>
+
+<section class="hero admin-hero">
+  <h1>Painel Administrativo</h1>
+  <p>Gerencie pedidos, produtos, estoque, promoções, cupons e imagens.</p>
+</section>
+
+<section class="abas-admin">
+  <button onclick="mostrarAba('pedidos')">Pedidos</button>
+  <button onclick="mostrarAba('produtos')">Adicionar Produto</button>
+  <button onclick="mostrarAba('cupons')">Cupons</button>
+  <button onclick="mostrarAba('imagens')">Produtos sem imagem</button>
+</section>
+
+<section class="admin-area" id="abaPedidos">
+  <h2 class="titulo-admin">Pedidos Recebidos</h2>
+  <div id="listaPedidos"></div>
+</section>
+
+<section class="admin-area escondido" id="abaProdutos">
+  <h2 class="titulo-admin">Adicionar Produto</h2>
+
+  <div class="form-produto">
+    <label>Código de barras</label>
+    <input
+      type="text"
+      id="produtoCodigoBarras"
+      placeholder="Bipe ou digite o código"
+      onkeydown="buscarPorCodigoBarras(event)"
+    >
+
+    <label>Nome do produto</label>
+    <input type="text" id="produtoNome">
+
+    <label>Marca</label>
+    <input type="text" id="produtoMarca">
+
+    <label>Laboratório</label>
+    <input type="text" id="produtoLaboratorio">
+
+    <label>Descrição</label>
+    <textarea id="produtoDescricao"></textarea>
+
+    <label>Valor normal</label>
+    <input type="number" id="produtoValor" step="0.01">
+
+    <label>Desconto da promoção (%)</label>
+    <input type="number" id="produtoDesconto" placeholder="Ex: 20">
+
+    <label>Quantidade em estoque</label>
+    <input type="number" id="produtoQuantidade">
+
+    <label>Categoria</label>
+    <select id="produtoCategoria">
+      <option value="cabelo">Cabelo</option>
+      <option value="corpo">Corpo</option>
+      <option value="rosto">Rosto</option>
+      <option value="perfumes">Perfumes</option>
+      <option value="oleos">Óleos</option>
+      <option value="higiene">Higiene</option>
+      <option value="infantil">Infantil</option>
+      <option value="skincare">Skincare</option>
+      <option value="maquiagem">Maquiagem</option>
+      <option value="promocao">Promoção</option>
+    </select>
+
+    <label>Imagem do produto</label>
+    <input type="file" id="produtoImagem" accept="image/*">
+
+    <img id="previewImagem" class="preview-imagem">
+
+    <button class="botao confirmar" onclick="salvarProduto()">
+      Salvar Produto
+    </button>
+  </div>
+
+  <h2 class="titulo-admin">Produtos Cadastrados</h2>
+  <div id="listaProdutosAdmin"></div>
+</section>
+
+<section class="admin-area escondido" id="abaCupons">
+  <h2 class="titulo-admin">Criar Cupom</h2>
+
+  <div class="form-produto">
+    <label>Código do cupom</label>
+    <input type="text" id="cupomCodigo" placeholder="Ex: PERFUME10">
+
+    <label>Tipo de desconto</label>
+    <select id="cupomTipo">
+      <option value="porcentagem">Porcentagem (%)</option>
+      <option value="valor">Valor em R$</option>
+    </select>
+
+    <label>Valor do desconto</label>
+    <input type="number" id="cupomValor" placeholder="Ex: 10">
+
+    <button class="botao confirmar" onclick="salvarCupom()">
+      Salvar Cupom
+    </button>
+  </div>
+
+  <h2 class="titulo-admin">Cupons Criados</h2>
+  <div id="listaCuponsAdmin"></div>
+</section>
+
+<section class="admin-area escondido" id="abaImagens">
+  <h2 class="titulo-admin">Produtos sem imagem</h2>
+
+  <p>
+    Aqui aparecerão produtos que estão sem imagem real ou usando a imagem padrão.
+  </p>
+
+  <div id="listaProdutosSemImagem"></div>
+</section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://bohfiydxvnqqtzxoaddf.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_P9eKigJblG47ArdcyYB-ZA_xWvaUlbM";
+
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+</script>
+
+<script src="admin.js"></script>
+
+</body>
+</html>
