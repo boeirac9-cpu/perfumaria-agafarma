@@ -60,12 +60,12 @@ async function carregarProdutos(){
 
     const card = document.createElement("div");
     card.classList.add("card");
-    card.dataset.nome = produto.nome;
-    card.dataset.categoria = produto.categoria;
+    card.dataset.nome = produto.nome || "";
+    card.dataset.categoria = produto.categoria || "";
     card.dataset.promocao = produto.promocao ? "sim" : "nao";
 
     card.innerHTML = `
-      <img src="${produto.imagem}" alt="${produto.nome}">
+      <img src="${produto.imagem || "logo.png"}" alt="${produto.nome || "Produto"}">
 
       <div class="info">
         <span class="categoria">
@@ -529,6 +529,109 @@ function mostrarEndereco(){
     : "none";
 }
 
+function pagamentoEhPix(pagamento){
+  const texto = String(pagamento || "").toLowerCase();
+  return texto.includes("pix");
+}
+
+function limparTextoParaClipboard(texto){
+  return String(texto || "").replace(/`/g, "").replace(/\$/g, "");
+}
+
+function mostrarPixNaTela(pix, pedidoId){
+  const modal = document.createElement("div");
+  modal.className = "modal-finalizacao ativo";
+  modal.id = "modalPixGerado";
+
+  const copiaCola = limparTextoParaClipboard(pix.pixCopiaECola || "");
+
+  const imagemQr = pix.imagemQrcode
+    ? `
+      <img
+        src="${pix.imagemQrcode}"
+        style="width:240px;max-width:100%;margin:15px auto;display:block;border-radius:14px;"
+      >
+    `
+    : "";
+
+  modal.innerHTML = `
+    <div class="finalizacao-caixa">
+      <h2>Pagamento via PIX</h2>
+
+      <p style="margin-bottom:10px;color:#555;">
+        Pedido #${pedidoId} criado com sucesso.
+      </p>
+
+      <p style="margin-bottom:15px;color:#555;">
+        Escaneie o QR Code ou copie o Pix Copia e Cola abaixo.
+      </p>
+
+      ${imagemQr}
+
+      <label>Pix Copia e Cola</label>
+      <textarea
+        id="pixCopiaEColaGerado"
+        readonly
+        style="height:130px;"
+      >${copiaCola}</textarea>
+
+      <button class="botao confirmar" onclick="copiarPixGerado()">
+        Copiar Pix
+      </button>
+
+      <button class="botao" onclick="location.reload()" style="margin-top:10px;">
+        Concluir
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+function copiarPixGerado(){
+  const campo = document.getElementById("pixCopiaEColaGerado");
+
+  if(!campo){
+    alert("Pix não encontrado.");
+    return;
+  }
+
+  campo.select();
+  campo.setSelectionRange(0, 99999);
+
+  navigator.clipboard.writeText(campo.value)
+    .then(() => {
+      alert("Pix copiado!");
+    })
+    .catch(() => {
+      document.execCommand("copy");
+      alert("Pix copiado!");
+    });
+}
+
+async function gerarPixPedido(valor, nomeCliente, pedidoId){
+  const respostaPix = await fetch("/api/gerar-pix", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      valor:Number(valor.toFixed(2)),
+      nome:nomeCliente,
+      pedidoId:pedidoId
+    })
+  });
+
+  const pix = await respostaPix.json();
+
+  if(!respostaPix.ok){
+    console.log(pix);
+    throw new Error(pix.erro || "Erro ao gerar Pix.");
+  }
+
+  return pix;
+}
+
 async function enviarPedido(){
   if(!clienteLogado){
     alert("Faça login antes de finalizar.");
@@ -580,6 +683,11 @@ async function enviarPedido(){
   });
 
   const totalFinal = calcularTotalComCupom(totalBruto);
+  const ehPix = pagamentoEhPix(pagamento);
+
+  const statusPedido = ehPix
+    ? "Aguardando pagamento PIX"
+    : "Novo pedido";
 
   const { data, error } = await supabaseClient
     .from("pedidos")
@@ -592,7 +700,7 @@ async function enviarPedido(){
       produtos: carrinho,
       endereco: enderecoPedido,
       total: Number(totalFinal.toFixed(2)),
-      status: "Novo pedido",
+      status: statusPedido,
       cupom: cupomAtual ? cupomAtual.codigo : null
     }])
     .select()
@@ -604,6 +712,41 @@ async function enviarPedido(){
     return;
   }
 
+  if(ehPix){
+    try{
+      const pix = await gerarPixPedido(totalFinal, nomeCliente, data.id);
+
+      await baixarEstoque();
+
+      carrinho = [];
+      cupomAtual = null;
+
+      const campoCupom = document.getElementById("campoCupom");
+      const cupomAplicado = document.getElementById("cupomAplicado");
+
+      if(campoCupom) campoCupom.value = "";
+      if(cupomAplicado) cupomAplicado.innerHTML = "";
+
+      atualizarCarrinho();
+      fecharFinalizacao();
+      carregarProdutos();
+
+      mostrarPixNaTela(pix, data.id);
+
+    }catch(erroPix){
+      console.log(erroPix);
+
+      await supabaseClient
+        .from("pedidos")
+        .update({ status:"Erro ao gerar PIX" })
+        .eq("id", data.id);
+
+      alert("Pedido criado, mas houve erro ao gerar o Pix. Entre em contato com a farmácia.");
+    }
+
+    return;
+  }
+
   await baixarEstoque();
 
   alert(`Pedido enviado!\nNúmero: #${data.id}`);
@@ -611,8 +754,11 @@ async function enviarPedido(){
   carrinho = [];
   cupomAtual = null;
 
-  document.getElementById("campoCupom").value = "";
-  document.getElementById("cupomAplicado").innerHTML = "";
+  const campoCupom = document.getElementById("campoCupom");
+  const cupomAplicado = document.getElementById("cupomAplicado");
+
+  if(campoCupom) campoCupom.value = "";
+  if(cupomAplicado) cupomAplicado.innerHTML = "";
 
   atualizarCarrinho();
   fecharFinalizacao();
