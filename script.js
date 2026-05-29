@@ -653,15 +653,7 @@ async function gerarPixPedido(valor, nomeCliente, pedidoId){
   return pix;
 }
 
-  const pix = await respostaPix.json();
 
-  if(!respostaPix.ok){
-    console.log(pix);
-    throw new Error(pix.erro || "Erro ao gerar Pix.");
-  }
-
-  return pix;
-}
 
 async function enviarPedido(){
   if(!clienteLogado){
