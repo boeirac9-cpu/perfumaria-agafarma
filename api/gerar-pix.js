@@ -74,7 +74,7 @@ export default async function handler(req, res){
     }
 
     const criarCobranca = await fetch(
-      `https://api-pix.bb.com.br/pix/v2/cob/${txid}?gw-dev-app-key=${appKey}`,
+      `http://api-pix.bb.com.br/pix/v2/cob/${txid}?gw-dev-app-key=${appKey}`,
       {
         method:"PUT",
         headers:{
@@ -85,11 +85,21 @@ export default async function handler(req, res){
       }
     );
 
-    const cobranca = await criarCobranca.json();
+    const cobrancaTexto = await criarCobranca.text();
+
+    let cobranca;
+    try{
+      cobranca = JSON.parse(cobrancaTexto);
+    }catch(e){
+      cobranca = {
+        respostaBruta:cobrancaTexto
+      };
+    }
 
     if(!criarCobranca.ok){
       return res.status(criarCobranca.status).json({
         erro:"Erro ao criar cobrança Pix.",
+        status:criarCobranca.status,
         detalhe:cobranca
       });
     }
@@ -105,7 +115,7 @@ export default async function handler(req, res){
     }
 
     const buscarQrCode = await fetch(
-      `https://api-pix.bb.com.br/pix/v2/loc/${locId}/qrcode?gw-dev-app-key=${appKey}`,
+      `http://api-pix.bb.com.br/pix/v2/loc/${locId}/qrcode?gw-dev-app-key=${appKey}`,
       {
         method:"GET",
         headers:{
@@ -115,11 +125,21 @@ export default async function handler(req, res){
       }
     );
 
-    const qrCode = await buscarQrCode.json();
+    const qrTexto = await buscarQrCode.text();
+
+    let qrCode;
+    try{
+      qrCode = JSON.parse(qrTexto);
+    }catch(e){
+      qrCode = {
+        respostaBruta:qrTexto
+      };
+    }
 
     if(!buscarQrCode.ok){
       return res.status(buscarQrCode.status).json({
         erro:"Cobrança criada, mas erro ao buscar QR Code.",
+        status:buscarQrCode.status,
         cobranca,
         detalhe:qrCode
       });
