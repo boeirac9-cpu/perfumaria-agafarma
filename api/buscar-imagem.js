@@ -26,20 +26,30 @@ export default async function handler(req, res){
 
   try{
     const url =
-      `https://serpapi.com/search.json?engine=google_images&q=${encodeURIComponent(q)}&api_key=${apiKey}`;
+      `https://serpapi.com/search.json?engine=google_images&q=${encodeURIComponent(q)}&hl=pt-br&gl=br&api_key=${apiKey}`;
 
     const resposta = await fetch(url);
     const dados = await resposta.json();
 
-    const imagens = dados.image_results || [];
+    if(dados.error){
+      return res.status(500).json({
+        erro: dados.error,
+        bruto: dados
+      });
+    }
+
+    const imagens = dados.images_results || dados.image_results || [];
 
     return res.status(200).json({
+      pesquisa:q,
+      total:imagens.length,
       imagens
     });
 
   }catch(error){
     return res.status(500).json({
-      erro: "Erro ao buscar imagens."
+      erro: "Erro ao buscar imagens.",
+      detalhe:String(error)
     });
   }
 }
