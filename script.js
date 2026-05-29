@@ -642,6 +642,20 @@ async function gerarPixPedido(valor, nomeCliente, pedidoId){
   const pix = await respostaPix.json();
 
   if(!respostaPix.ok){
+    console.log("ERRO PIX COMPLETO:");
+    console.log(JSON.stringify(pix, null, 2));
+
+    alert(JSON.stringify(pix, null, 2));
+
+    throw new Error(pix.erro || "Erro ao gerar Pix.");
+  }
+
+  return pix;
+}
+
+  const pix = await respostaPix.json();
+
+  if(!respostaPix.ok){
     console.log(pix);
     throw new Error(pix.erro || "Erro ao gerar Pix.");
   }

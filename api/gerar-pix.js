@@ -74,7 +74,7 @@ export default async function handler(req, res){
     }
 
     const criarCobranca = await fetch(
-      `https://api.bb.com.br/pix/v2/cob/${txid}?gw-dev-app-key=${appKey}`,
+      `https://api-pix.bb.com.br/pix/v2/cob/${txid}?gw-dev-app-key=${appKey}`,
       {
         method:"PUT",
         headers:{
@@ -105,7 +105,7 @@ export default async function handler(req, res){
     }
 
     const buscarQrCode = await fetch(
-      `https://api.bb.com.br/pix/v2/loc/${locId}/qrcode?gw-dev-app-key=${appKey}`,
+      `https://api-pix.bb.com.br/pix/v2/loc/${locId}/qrcode?gw-dev-app-key=${appKey}`,
       {
         method:"GET",
         headers:{
