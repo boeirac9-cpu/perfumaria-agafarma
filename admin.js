@@ -510,7 +510,7 @@ async function buscarSugestaoImagem(id, nome, codigo){
 
     const dados = await resposta.json();
 
-    const imagens = dados.image_results || [];
+    const imagens = dados.imagens || [];
 
     if(imagens.length === 0){
       area.innerHTML = "<p>Nenhuma imagem encontrada.</p>";
