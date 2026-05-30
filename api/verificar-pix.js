@@ -42,8 +42,10 @@ export default async function handler(req, res){
     const tokenDados = await tokenResposta.json();
 
     if(!tokenResposta.ok){
-      return res.status(tokenResposta.status).json({
-        erro:"Erro ao gerar token.",
+      return res.status(200).json({
+        sucesso:false,
+        pago:false,
+        status:"ERRO_TOKEN",
         detalhe:tokenDados
       });
     }
@@ -57,7 +59,7 @@ export default async function handler(req, res){
       `https://api-pix.bb.com.br/pix/v2/pix` +
       `?inicio=${encodeURIComponent(inicio)}` +
       `&fim=${encodeURIComponent(fim)}` +
-      `&txid=${encodeURIComponent(txid)}` +
+      `&txId=${encodeURIComponent(txid)}` +
       `&gw-dev-app-key=${appKey}`;
 
     const respostaPix = await fetch(urlPix, {
@@ -78,13 +80,6 @@ export default async function handler(req, res){
       dadosPix = { respostaBruta:textoPix };
     }
 
-    if(!respostaPix.ok){
-      return res.status(respostaPix.status).json({
-        erro:"Erro ao consultar Pix recebido.",
-        detalhe:dadosPix
-      });
-    }
-
     const listaPix = dadosPix.pix || [];
     const pixEncontrado = listaPix.find(item => item.txid === txid);
 
@@ -102,14 +97,16 @@ export default async function handler(req, res){
     return res.status(200).json({
       sucesso:true,
       pago:false,
-      status:"NAO_ENCONTRADO",
+      status:"AGUARDANDO",
       txid,
       dados:dadosPix
     });
 
   }catch(error){
-    return res.status(500).json({
-      erro:"Erro interno ao verificar Pix.",
+    return res.status(200).json({
+      sucesso:false,
+      pago:false,
+      status:"ERRO_INTERNO",
       detalhe:String(error)
     });
   }
