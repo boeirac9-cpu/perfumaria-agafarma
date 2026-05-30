@@ -730,7 +730,8 @@ async function enviarPedido(){
 cupom: cupomAtual ? cupomAtual.codigo : null,
 pix_txid: null,
 pix_pago: false,
-estoque_baixado: false
+estoque_baixado: false,
+criado_em: new Date().toISOString()
     }])
     .select()
     .single();
@@ -873,7 +874,7 @@ async function carregarMeusPedidos(){
       });
     }
 
-    const criadoEm = pedido.created_at ? new Date(pedido.created_at) : null;
+    const criadoEm = pedido.criado_em ? new Date(pedido.criado_em) : null;
     const minutos = criadoEm ? (new Date() - criadoEm) / 1000 / 60 : 999;
 
     const podeCancelar =
@@ -950,7 +951,7 @@ async function cancelarPedidoCliente(pedidoId){
     return;
   }
 
-  const criadoEm = pedido.created_at ? new Date(pedido.created_at) : null;
+  const criadoEm = pedido.criado_em ? new Date(pedido.criado_em) : null;
   const minutos = criadoEm
   ? Math.floor((Date.now() - criadoEm.getTime()) / 1000 / 60)
   : 999;
