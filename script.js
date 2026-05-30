@@ -865,19 +865,7 @@ async function carregarMeusPedidos(){
 
       <ul>${produtosHTML}</ul>
 
-      ${
-  pedido.pagamento === "Pix" && pedido.status === "Aguardando pagamento PIX"
-  ? `
-    <button
-      class="botao confirmar"
-      style="margin-top:10px;"
-      onclick="verificarPagamentoPix(${pedido.id}, '${pedido.pix_txid}')"
-    >
-      Verificar pagamento PIX
-    </button>
-  `
-  : ""
-}
+      
 
 ${
   podeCancelar
