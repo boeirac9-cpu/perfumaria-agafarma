@@ -109,11 +109,8 @@ async function carregarProdutos(){
   });
 }
 
-/* CUPONS */
-
 async function carregarCuponsCliente(){
   const lista = document.getElementById("listaCuponsCliente");
-
   if(!lista) return;
 
   lista.innerHTML = "<p class='sem-pedidos'>Carregando cupons...</p>";
@@ -192,27 +189,18 @@ async function aplicarCupom(){
   }
 
   cupomAtual = data;
-
-  document.getElementById("cupomAplicado").innerHTML =
-    `Cupom aplicado: ${data.codigo}`;
-
+  document.getElementById("cupomAplicado").innerHTML = `Cupom aplicado: ${data.codigo}`;
   atualizarCarrinho();
 }
 
 async function aplicarCupomAutomatico(codigoCupom){
   const campo = document.getElementById("campoCupom");
-
-  if(campo){
-    campo.value = codigoCupom;
-  }
-
+  if(campo) campo.value = codigoCupom;
   await aplicarCupom();
 }
 
 function calcularTotalComCupom(total){
-  if(!cupomAtual){
-    return total;
-  }
+  if(!cupomAtual) return total;
 
   if(cupomAtual.tipo === "porcentagem"){
     return total - (total * Number(cupomAtual.valor) / 100);
@@ -224,8 +212,6 @@ function calcularTotalComCupom(total){
 
   return total;
 }
-
-/* CARRINHO */
 
 function adicionarCarrinho(id){
   const produto = produtos.find(item => item.id === id);
@@ -326,8 +312,6 @@ function removerItem(index){
   atualizarCarrinho();
 }
 
-/* MENU E FILTROS */
-
 function abrirMenu(){
   document.getElementById("menuLateral").classList.add("ativo");
 }
@@ -371,8 +355,6 @@ function pesquisarProduto(){
   });
 }
 
-/* LOGIN */
-
 function criarModalLogin(){
   const modal = document.createElement("div");
 
@@ -407,20 +389,6 @@ function criarModalLogin(){
         <button class="botao confirmar" onclick="entrarOuCadastrar()">
           Entrar / Cadastrar
         </button>
-
-        ${
-          clienteLogado
-          ? `
-            <button
-              class="botao sair-conta"
-              onclick="sairConta()"
-              style="margin-top:12px;background:#d62828;"
-            >
-              Sair da conta
-            </button>
-          `
-          : ""
-        }
       </div>
     </div>
   `;
@@ -493,25 +461,17 @@ async function entrarOuCadastrar(){
   localStorage.setItem("clienteLogadoAgafarma", JSON.stringify(clienteLogado));
 
   atualizarBotaoLogin();
-
   alert("✅ Login realizado com sucesso!");
-
   fecharLogin();
 }
 
 function sairConta(){
   localStorage.removeItem("clienteLogadoAgafarma");
-
   clienteLogado = null;
-
   atualizarBotaoLogin();
-
   fecharLogin();
-
   alert("Conta desconectada.");
 }
-
-/* FINALIZAÇÃO */
 
 function abrirFinalizacao(){
   if(carrinho.length === 0){
@@ -528,9 +488,7 @@ function abrirFinalizacao(){
   document.getElementById("modalFinalizacao").classList.add("ativo");
 
   const celular = document.getElementById("celular");
-  if(celular){
-    celular.value = clienteLogado.telefone;
-  }
+  if(celular) celular.value = clienteLogado.telefone;
 }
 
 function fecharFinalizacao(){
@@ -551,16 +509,12 @@ function pagamentoEhPix(pagamento){
   return texto.includes("pix");
 }
 
-function limparTextoParaClipboard(texto){
-  return String(texto || "").replace(/`/g, "").replace(/\$/g, "");
-}
-
 function mostrarPixNaTela(pix, pedidoId){
   const modal = document.createElement("div");
   modal.className = "modal-finalizacao ativo";
   modal.id = "modalPixGerado";
 
-  const copiaCola = limparTextoParaClipboard(pix.pixCopiaECola || "");
+  const copiaCola = String(pix.pixCopiaECola || "");
 
   const imagemQr = pix.imagemQrcode
     ? `
@@ -586,11 +540,7 @@ function mostrarPixNaTela(pix, pedidoId){
       ${imagemQr}
 
       <label>Pix Copia e Cola</label>
-      <textarea
-        id="pixCopiaEColaGerado"
-        readonly
-        style="height:130px;"
-      >${copiaCola}</textarea>
+      <textarea id="pixCopiaEColaGerado" readonly style="height:130px;">${copiaCola}</textarea>
 
       <button class="botao confirmar" onclick="copiarPixGerado()">
         Copiar Pix
@@ -617,9 +567,7 @@ function copiarPixGerado(){
   campo.setSelectionRange(0, 99999);
 
   navigator.clipboard.writeText(campo.value)
-    .then(() => {
-      alert("Pix copiado!");
-    })
+    .then(() => alert("Pix copiado!"))
     .catch(() => {
       document.execCommand("copy");
       alert("Pix copiado!");
@@ -644,9 +592,7 @@ async function gerarPixPedido(valor, nomeCliente, pedidoId){
   if(!respostaPix.ok){
     console.log("ERRO PIX COMPLETO:");
     console.log(JSON.stringify(pix, null, 2));
-
     alert(JSON.stringify(pix, null, 2));
-
     throw new Error(pix.erro || "Erro ao gerar Pix.");
   }
 
@@ -706,10 +652,6 @@ async function enviarPedido(){
   const totalFinal = calcularTotalComCupom(totalBruto);
   const ehPix = pagamentoEhPix(pagamento);
 
-  const statusPedido = ehPix
-    ? "Aguardando pagamento PIX"
-    : "Novo pedido";
-
   const { data, error } = await supabaseClient
     .from("pedidos")
     .insert([{
@@ -721,7 +663,7 @@ async function enviarPedido(){
       produtos: carrinho,
       endereco: enderecoPedido,
       total: Number(totalFinal.toFixed(2)),
-      status: statusPedido,
+      status: ehPix ? "Aguardando pagamento PIX" : "Novo pedido",
       cupom: cupomAtual ? cupomAtual.codigo : null
     }])
     .select()
