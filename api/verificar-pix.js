@@ -48,42 +48,63 @@ export default async function handler(req, res){
       });
     }
 
-    const resposta = await fetch(
-      `https://api-pix.bb.com.br/pix/v2/cob/${txid}?gw-dev-app-key=${appKey}`,
-      {
-        method:"GET",
-        agent:httpsAgent,
-        headers:{
-          "Authorization":`Bearer ${tokenDados.access_token}`,
-          "Content-Type":"application/json"
-        }
+    const token = tokenDados.access_token;
+
+    const inicio = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString();
+    const fim = new Date(Date.now() + 1000 * 60 * 10).toISOString();
+
+    const urlPix =
+      `https://api-pix.bb.com.br/pix/v2/pix` +
+      `?inicio=${encodeURIComponent(inicio)}` +
+      `&fim=${encodeURIComponent(fim)}` +
+      `&txid=${encodeURIComponent(txid)}` +
+      `&gw-dev-app-key=${appKey}`;
+
+    const respostaPix = await fetch(urlPix, {
+      method:"GET",
+      agent:httpsAgent,
+      headers:{
+        "Authorization":`Bearer ${token}`,
+        "Content-Type":"application/json"
       }
-    );
+    });
 
-    const texto = await resposta.text();
+    const textoPix = await respostaPix.text();
 
-    let dados;
+    let dadosPix;
     try{
-      dados = JSON.parse(texto);
+      dadosPix = JSON.parse(textoPix);
     }catch(e){
-      dados = { respostaBruta:texto };
+      dadosPix = { respostaBruta:textoPix };
     }
 
-    if(!resposta.ok){
-      return res.status(resposta.status).json({
-        erro:"Erro ao consultar Pix.",
-        detalhe:dados
+    if(!respostaPix.ok){
+      return res.status(respostaPix.status).json({
+        erro:"Erro ao consultar Pix recebido.",
+        detalhe:dadosPix
       });
     }
 
-    const pago = dados.status === "CONCLUIDA";
+    const listaPix = dadosPix.pix || [];
+    const pixEncontrado = listaPix.find(item => item.txid === txid);
+
+    if(pixEncontrado){
+      return res.status(200).json({
+        sucesso:true,
+        pago:true,
+        status:"CONCLUIDA",
+        txid,
+        pix:pixEncontrado,
+        dados:dadosPix
+      });
+    }
 
     return res.status(200).json({
       sucesso:true,
-      pago,
-      status:dados.status,
+      pago:false,
+      status:"NAO_ENCONTRADO",
       txid,
-      dados
+      dados:dadosPix
     });
 
   }catch(error){
