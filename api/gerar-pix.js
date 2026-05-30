@@ -1,3 +1,6 @@
+import https from "https";
+import fetch from "node-fetch";
+
 export default async function handler(req, res){
 
   if(req.method !== "POST"){
@@ -10,14 +13,24 @@ export default async function handler(req, res){
   const clientSecret = process.env.BB_CLIENT_SECRET;
   const appKey = process.env.BB_APP_KEY;
   const pixKey = process.env.BB_PIX_KEY;
+  const certBase64 = process.env.BB_CERT_BASE64;
+  const certPassword = process.env.BB_CERT_PASSWORD;
 
-  if(!clientId || !clientSecret || !appKey || !pixKey){
+  if(!clientId || !clientSecret || !appKey || !pixKey || !certBase64 || !certPassword){
     return res.status(500).json({
-      erro: "Credenciais BB não configuradas."
+      erro: "Credenciais BB ou certificado não configurados."
     });
   }
 
   try{
+    const pfxBuffer = Buffer.from(certBase64, "base64");
+
+    const httpsAgent = new https.Agent({
+      pfx: pfxBuffer,
+      passphrase: certPassword,
+      rejectUnauthorized: true
+    });
+
     const { valor, nome, cpf, pedidoId } = req.body;
 
     if(!valor || Number(valor) <= 0){
@@ -74,9 +87,10 @@ export default async function handler(req, res){
     }
 
     const criarCobranca = await fetch(
-      `http://api-pix.bb.com.br/pix/v2/cob/${txid}?gw-dev-app-key=${appKey}`,
+      `https://api-pix.bb.com.br/pix/v2/cob/${txid}?gw-dev-app-key=${appKey}`,
       {
         method:"PUT",
+        agent:httpsAgent,
         headers:{
           "Authorization":`Bearer ${token}`,
           "Content-Type":"application/json"
@@ -91,9 +105,7 @@ export default async function handler(req, res){
     try{
       cobranca = JSON.parse(cobrancaTexto);
     }catch(e){
-      cobranca = {
-        respostaBruta:cobrancaTexto
-      };
+      cobranca = { respostaBruta:cobrancaTexto };
     }
 
     if(!criarCobranca.ok){
@@ -108,6 +120,7 @@ export default async function handler(req, res){
 
     if(!locId){
       return res.status(200).json({
+        sucesso:true,
         txid,
         cobranca,
         aviso:"Cobrança criada, mas sem loc.id para buscar QR Code."
@@ -115,9 +128,10 @@ export default async function handler(req, res){
     }
 
     const buscarQrCode = await fetch(
-      `http://api-pix.bb.com.br/pix/v2/loc/${locId}/qrcode?gw-dev-app-key=${appKey}`,
+      `https://api-pix.bb.com.br/pix/v2/loc/${locId}/qrcode?gw-dev-app-key=${appKey}`,
       {
         method:"GET",
+        agent:httpsAgent,
         headers:{
           "Authorization":`Bearer ${token}`,
           "Content-Type":"application/json"
@@ -131,9 +145,7 @@ export default async function handler(req, res){
     try{
       qrCode = JSON.parse(qrTexto);
     }catch(e){
-      qrCode = {
-        respostaBruta:qrTexto
-      };
+      qrCode = { respostaBruta:qrTexto };
     }
 
     if(!buscarQrCode.ok){
