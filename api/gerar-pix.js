@@ -119,16 +119,16 @@ export default async function handler(req, res){
 
     const locId = cobranca.loc && cobranca.loc.id;
 
-    if(!locId){
+  if(!locId){
   console.log("COBRANCA BB:", JSON.stringify(cobranca, null, 2));
 
   return res.status(200).json({
-  sucesso:true,
-  txid,
-  cobrancaCompleta: cobranca,
-  aviso:"Cobrança criada, mas sem loc.id para buscar QR Code."
-});
-
+    sucesso:true,
+    txid,
+    cobrancaCompleta: cobranca,
+    aviso:"Cobrança criada, mas sem loc.id para buscar QR Code."
+  });
+}
     const buscarQrCode = await fetch(
       `https://api-pix.bb.com.br/pix/v2/loc/${locId}/qrcode?gw-dev-app-key=${appKey}`,
       {
