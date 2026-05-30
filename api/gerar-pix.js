@@ -63,10 +63,11 @@ export default async function handler(req, res){
 
     const token = tokenDados.access_token;
 
-    const txid =
-      `AGAFARMA${Date.now()}`
-      .replace(/[^a-zA-Z0-9]/g, "")
-      .substring(0, 35);
+    const txid = (
+  "AGAFARMA" +
+  Date.now() +
+  Math.floor(Math.random() * 1000000000)
+).substring(0, 35);
 
     const corpoCobranca = {
       calendario:{
