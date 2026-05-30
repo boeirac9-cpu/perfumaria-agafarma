@@ -49,7 +49,7 @@ export default async function handler(req, res){
         "Authorization": `Basic ${credenciais}`,
         "Content-Type": "application/x-www-form-urlencoded"
       },
-      body: "grant_type=client_credentials&scope=pix.write pix.read"
+      body: "grant_type=client_credentials&scope=cob.write cob.read pix.write pix.read"
     });
 
     const tokenDados = await tokenResposta.json();
