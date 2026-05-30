@@ -186,10 +186,16 @@ const buscarQrCode = await fetch(
 
     let qrCode;
     try{
-      qrCode = JSON.parse(qrTexto);
-    }catch(e){
-      qrCode = { respostaBruta:qrTexto };
-    }
+  cobranca = JSON.parse(cobrancaTexto);
+
+  console.log(
+    "COBRANCA BB:",
+    JSON.stringify(cobranca, null, 2)
+  );
+
+}catch(e){
+  cobranca = { respostaBruta:cobrancaTexto };
+}
 
     if(!buscarQrCode.ok){
       return res.status(buscarQrCode.status).json({
