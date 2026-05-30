@@ -572,6 +572,12 @@ const txid = String(pix.txid || "");
 const intervaloPix = setInterval(async () => {
   tentativasPix++;
 
+  console.log("VERIFICANDO PIX AUTOMATICAMENTE", {
+    pedidoId,
+    txid,
+    tentativa: tentativasPix
+  });
+
   const confirmado = await verificarPagamentoPix(pedidoId, txid, true);
 
   if(confirmado){
@@ -977,7 +983,16 @@ async function verificarPagamentoPix(pedidoId, txid, automatico = false){
   }
 
   const resposta = await fetch(`/api/verificar-pix?txid=${encodeURIComponent(txid)}`);
-  const dados = await resposta.json();
+
+console.log("CHAMANDO API PIX", txid);
+
+const dados = await resposta.json();
+
+console.log("RETORNO DO BANCO DO BRASIL:", dados);
+
+if(automatico){
+  console.log("VERIFICAÇÃO AUTOMÁTICA RODANDO");
+}
 
   if(!resposta.ok){
     console.log(dados);
@@ -986,9 +1001,13 @@ async function verificarPagamentoPix(pedidoId, txid, automatico = false){
   }
 
   if(!dados.pago){
+
+  console.log("PIX AINDA NÃO CONFIRMADO", dados);
+
   if(!automatico){
     alert("Pagamento ainda não confirmado.");
   }
+
   return false;
 }
 
@@ -1035,7 +1054,11 @@ async function verificarPagamentoPix(pedidoId, txid, automatico = false){
     })
     .eq("id", pedidoId);
 
-  if(!automatico){
+  console.log("PIX CONFIRMADO");
+
+console.log("PIX CONFIRMADO");
+
+if(!automatico){
   alert("Pagamento confirmado! Pedido marcado como Pago.");
 }
 
