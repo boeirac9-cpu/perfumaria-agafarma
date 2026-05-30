@@ -108,16 +108,43 @@ export default async function handler(req, res){
       Math.floor(Math.random() * 1000000000)
     ).substring(0, 35);
 
-    const corpoCobranca = {
-      calendario:{
-        expiracao:3600
-      },
-      valor:{
-        original:Number(valor).toFixed(2)
-      },
-      chave:pixKey,
-      solicitacaoPagador:`Pedido Agafarma ${pedidoId || txid}`
-    };
+    const criarLoc = await fetch(
+  `https://api-pix.bb.com.br/pix/v2/loc?gw-dev-app-key=${appKey}`,
+  {
+    method:"POST",
+    agent:httpsAgent,
+    headers:{
+      "Authorization":`Bearer ${token}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      tipoCob:"cob"
+    })
+  }
+);
+
+const locDados = await criarLoc.json();
+
+if(!criarLoc.ok){
+  return res.status(criarLoc.status).json({
+    erro:"Erro ao criar localização Pix.",
+    detalhe:locDados
+  });
+}
+
+const corpoCobranca = {
+  calendario:{
+    expiracao:3600
+  },
+  valor:{
+    original:Number(valor).toFixed(2)
+  },
+  chave:pixKey,
+  loc:{
+    id:locDados.id
+  },
+  solicitacaoPagador:`Pedido Agafarma ${pedidoId || txid}`
+};
 
     if(nome && cpf){
       corpoCobranca.devedor = {
@@ -156,7 +183,7 @@ export default async function handler(req, res){
       });
     }
 
-    const locId = cobranca.loc && cobranca.loc.id;
+    const locId = (cobranca.loc && cobranca.loc.id) || locDados.id;
 
     if(!locId){
       const pixCopiaECola = gerarPixCopiaCola({
