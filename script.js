@@ -683,18 +683,7 @@ async function enviarPedido(){
 
       await baixarEstoque();
 
-      carrinho = [];
-      cupomAtual = null;
-
-      const campoCupom = document.getElementById("campoCupom");
-      const cupomAplicado = document.getElementById("cupomAplicado");
-
-      if(campoCupom) campoCupom.value = "";
-      if(cupomAplicado) cupomAplicado.innerHTML = "";
-
-      atualizarCarrinho();
-      fecharFinalizacao();
-      carregarProdutos();
+      limparCarrinhoDepoisPedido();
 
       mostrarPixNaTela(pix, data.id);
 
@@ -716,6 +705,10 @@ async function enviarPedido(){
 
   alert(`Pedido enviado!\nNúmero: #${data.id}`);
 
+  limparCarrinhoDepoisPedido();
+}
+
+function limparCarrinhoDepoisPedido(){
   carrinho = [];
   cupomAtual = null;
 
@@ -746,4 +739,184 @@ async function baixarEstoque(){
         .eq("id", produto.id);
     }
   }
+}
+
+/* MEUS PEDIDOS */
+
+function abrirMeusPedidos(){
+  if(!clienteLogado){
+    alert("Faça login para ver seus pedidos.");
+    abrirLogin();
+    return;
+  }
+
+  document.getElementById("modalMeusPedidos").classList.add("ativo");
+  carregarMeusPedidos();
+}
+
+function fecharMeusPedidos(){
+  document.getElementById("modalMeusPedidos").classList.remove("ativo");
+}
+
+async function carregarMeusPedidos(){
+  const lista = document.getElementById("listaMeusPedidos");
+
+  if(!lista){
+    return;
+  }
+
+  lista.innerHTML = "<p>Carregando pedidos...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("pedidos")
+    .select("*")
+    .eq("telefone_login", clienteLogado.telefone)
+    .order("id", { ascending:false });
+
+  if(error){
+    console.log(error);
+    lista.innerHTML = "<p>Erro ao carregar pedidos.</p>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = "<p>Você ainda não fez pedidos.</p>";
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  data.forEach(pedido => {
+    let produtosHTML = "";
+
+    if(pedido.produtos && pedido.produtos.length > 0){
+      pedido.produtos.forEach(item => {
+        produtosHTML += `<li>${item.nome} - Qtd: ${item.quantidade}</li>`;
+      });
+    }
+
+    const criadoEm = pedido.created_at ? new Date(pedido.created_at) : null;
+    const minutos = criadoEm ? (new Date() - criadoEm) / 1000 / 60 : 999;
+
+    const podeCancelar =
+      minutos <= 5 &&
+      pedido.status !== "Cancelado" &&
+      pedido.status !== "Cancelado pelo cliente" &&
+      pedido.status !== "Pago" &&
+      pedido.status !== "Concluído" &&
+      pedido.status !== "Concluido";
+
+    const div = document.createElement("div");
+    div.classList.add("pedido-card");
+
+    div.innerHTML = `
+      <h3>Pedido #${pedido.id}</h3>
+
+      <p><strong>Status:</strong> ${pedido.status}</p>
+      <p><strong>Pagamento:</strong> ${pedido.pagamento}</p>
+      <p><strong>Total:</strong> R$ ${Number(pedido.total).toFixed(2).replace(".", ",")}</p>
+
+      <ul>${produtosHTML}</ul>
+
+      ${
+        podeCancelar
+        ? `
+          <button
+            class="botao"
+            style="background:#d62828;margin-top:10px;"
+            onclick="cancelarPedidoCliente(${pedido.id})"
+          >
+            Cancelar pedido
+          </button>
+        `
+        : `
+          <p style="color:#777;font-size:14px;">
+            Cancelamento disponível apenas até 5 minutos após o pedido.
+          </p>
+        `
+      }
+    `;
+
+    lista.appendChild(div);
+  });
+}
+
+async function cancelarPedidoCliente(pedidoId){
+
+  if(!confirm("Deseja cancelar este pedido? O estoque será devolvido.")){
+    return;
+  }
+
+  const { data: pedido, error } = await supabaseClient
+    .from("pedidos")
+    .select("*")
+    .eq("id", pedidoId)
+    .single();
+
+  if(error || !pedido){
+    console.log(error);
+    alert("Erro ao localizar pedido.");
+    return;
+  }
+
+  if(pedido.status === "Cancelado" || pedido.status === "Cancelado pelo cliente"){
+    alert("Este pedido já está cancelado.");
+    carregarMeusPedidos();
+    return;
+  }
+
+  if(pedido.status === "Pago" || pedido.status === "Concluído" || pedido.status === "Concluido"){
+    alert("Este pedido já foi pago ou concluído e não pode ser cancelado.");
+    carregarMeusPedidos();
+    return;
+  }
+
+  const criadoEm = pedido.created_at ? new Date(pedido.created_at) : null;
+  const minutos = criadoEm ? (new Date() - criadoEm) / 1000 / 60 : 999;
+
+  if(minutos > 5){
+    alert("O prazo de 5 minutos para cancelamento acabou. Entre em contato com a farmácia.");
+    carregarMeusPedidos();
+    return;
+  }
+
+  if(pedido.produtos && pedido.produtos.length > 0){
+    for(const item of pedido.produtos){
+
+      const { data: produtoAtual } = await supabaseClient
+        .from("produtos")
+        .select("quantidade")
+        .eq("id", item.id)
+        .single();
+
+      if(produtoAtual){
+        await supabaseClient
+          .from("produtos")
+          .update({
+            quantidade:
+              Number(produtoAtual.quantidade || 0) +
+              Number(item.quantidade || 0)
+          })
+          .eq("id", item.id);
+      }
+    }
+  }
+
+  const { error: erroCancelar } = await supabaseClient
+    .from("pedidos")
+    .update({
+      status:"Cancelado pelo cliente"
+    })
+    .eq("id", pedidoId);
+
+  if(erroCancelar){
+    console.log(erroCancelar);
+    alert("Erro ao cancelar pedido.");
+    return;
+  }
+
+  alert("Pedido cancelado com sucesso e estoque devolvido!");
+
+  carregarMeusPedidos();
+  carregarProdutos();
 }
