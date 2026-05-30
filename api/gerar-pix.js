@@ -1,12 +1,53 @@
 import https from "https";
 import fetch from "node-fetch";
 
+function emv(id, valor){
+  const texto = String(valor);
+  const tamanho = String(texto.length).padStart(2, "0");
+  return `${id}${tamanho}${texto}`;
+}
+
+function crc16(payload){
+  let crc = 0xffff;
+
+  for(let i = 0; i < payload.length; i++){
+    crc ^= payload.charCodeAt(i) << 8;
+
+    for(let j = 0; j < 8; j++){
+      crc = (crc & 0x8000)
+        ? (crc << 1) ^ 0x1021
+        : crc << 1;
+    }
+  }
+
+  return (crc & 0xffff).toString(16).toUpperCase().padStart(4, "0");
+}
+
+function gerarPixCopiaCola({ chave, nome, cidade, valor, txid }){
+  const gui = emv("00", "br.gov.bcb.pix");
+  const chavePix = emv("01", chave);
+  const merchantAccount = emv("26", gui + chavePix);
+
+  let payload =
+    emv("00", "01") +
+    merchantAccount +
+    emv("52", "0000") +
+    emv("53", "986") +
+    emv("54", Number(valor).toFixed(2)) +
+    emv("58", "BR") +
+    emv("59", nome.substring(0, 25)) +
+    emv("60", cidade.substring(0, 15)) +
+    emv("62", emv("05", txid.substring(0, 25)));
+
+  payload += "6304";
+
+  return payload + crc16(payload);
+}
+
 export default async function handler(req, res){
 
   if(req.method !== "POST"){
-    return res.status(405).json({
-      erro: "Método não permitido."
-    });
+    return res.status(405).json({ erro: "Método não permitido." });
   }
 
   const clientId = process.env.BB_CLIENT_ID;
@@ -34,9 +75,7 @@ export default async function handler(req, res){
     const { valor, nome, cpf, pedidoId } = req.body;
 
     if(!valor || Number(valor) <= 0){
-      return res.status(400).json({
-        erro: "Valor inválido."
-      });
+      return res.status(400).json({ erro: "Valor inválido." });
     }
 
     const credenciais = Buffer
@@ -64,10 +103,10 @@ export default async function handler(req, res){
     const token = tokenDados.access_token;
 
     const txid = (
-  "AGAFARMA" +
-  Date.now() +
-  Math.floor(Math.random() * 1000000000)
-).substring(0, 35);
+      "AGAFARMA" +
+      Date.now() +
+      Math.floor(Math.random() * 1000000000)
+    ).substring(0, 35);
 
     const corpoCobranca = {
       calendario:{
@@ -119,16 +158,28 @@ export default async function handler(req, res){
 
     const locId = cobranca.loc && cobranca.loc.id;
 
-  if(!locId){
-  console.log("COBRANCA BB:", JSON.stringify(cobranca, null, 2));
+    if(!locId){
+      const pixCopiaECola = gerarPixCopiaCola({
+        chave: pixKey,
+        nome: "HERMEL MARTINS LTDA",
+        cidade: "LAGOA VERMELHA",
+        valor: Number(valor),
+        txid
+      });
 
-  return res.status(200).json({
-    sucesso:true,
-    txid,
-    cobrancaCompleta: cobranca,
-    aviso:"Cobrança criada, mas sem loc.id para buscar QR Code."
-  });
-}
+      const imagemQrcode =
+        `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pixCopiaECola)}`;
+
+      return res.status(200).json({
+        sucesso:true,
+        txid,
+        valor:Number(valor).toFixed(2),
+        pixCopiaECola,
+        imagemQrcode,
+        cobrancaCompleta:cobranca
+      });
+    }
+
     const buscarQrCode = await fetch(
       `https://api-pix.bb.com.br/pix/v2/loc/${locId}/qrcode?gw-dev-app-key=${appKey}`,
       {
@@ -163,8 +214,8 @@ export default async function handler(req, res){
       sucesso:true,
       txid,
       valor:Number(valor).toFixed(2),
-      pixCopiaECola:qrCode.qrcode,
-      imagemQrcode:qrCode.imagemQrcode,
+      pixCopiaECola:qrCode.qrcode || qrCode.emv || "",
+      imagemQrcode:qrCode.imagemQrcode || "",
       cobranca,
       qrCode
     });
