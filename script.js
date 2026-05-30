@@ -540,13 +540,25 @@ function mostrarPixNaTela(pix, pedidoId){
       ${imagemQr}
 
       <label>Pix Copia e Cola</label>
-      <textarea id="pixCopiaEColaGerado" readonly style="height:130px;">${copiaCola}</textarea>
 
-      <button class="botao confirmar" onclick="copiarPixGerado()">
+      <textarea
+        id="pixCopiaEColaGerado"
+        readonly
+        style="height:130px;"
+      >${copiaCola}</textarea>
+
+      <button
+        class="botao confirmar"
+        onclick="copiarPixGerado()"
+      >
         Copiar Pix
       </button>
 
-      <button class="botao" onclick="location.reload()" style="margin-top:10px;">
+      <button
+        class="botao"
+        onclick="location.reload()"
+        style="margin-top:10px;"
+      >
         Concluir
       </button>
     </div>
