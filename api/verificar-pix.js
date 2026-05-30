@@ -52,14 +52,54 @@ export default async function handler(req, res){
 
     const token = tokenDados.access_token;
 
+    const respostaCobranca = await fetch(
+      `https://api-pix.bb.com.br/pix/v2/cob/${txid}?gw-dev-app-key=${appKey}`,
+      {
+        method:"GET",
+        agent:httpsAgent,
+        headers:{
+          "Authorization":`Bearer ${token}`,
+          "Content-Type":"application/json"
+        }
+      }
+    );
+
+    const textoCobranca = await respostaCobranca.text();
+
+    let cobranca;
+    try{
+      cobranca = JSON.parse(textoCobranca);
+    }catch(e){
+      cobranca = { respostaBruta:textoCobranca };
+    }
+
+    const pixDaCobranca =
+      cobranca.pix &&
+      Array.isArray(cobranca.pix) &&
+      cobranca.pix.length > 0;
+
+    if(
+      cobranca.status === "CONCLUIDA" ||
+      cobranca.status === "CONCLUIDO" ||
+      pixDaCobranca
+    ){
+      return res.status(200).json({
+        sucesso:true,
+        pago:true,
+        status:cobranca.status || "CONCLUIDA",
+        txid,
+        cobranca
+      });
+    }
+
     const inicio = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString();
     const fim = new Date(Date.now() + 1000 * 60 * 10).toISOString();
 
     const urlPix =
-  `https://api-pix.bb.com.br/pix/v2/pix` +
-  `?inicio=${encodeURIComponent(inicio)}` +
-  `&fim=${encodeURIComponent(fim)}` +
-  `&gw-dev-app-key=${appKey}`;
+      `https://api-pix.bb.com.br/pix/v2/pix` +
+      `?inicio=${encodeURIComponent(inicio)}` +
+      `&fim=${encodeURIComponent(fim)}` +
+      `&gw-dev-app-key=${appKey}`;
 
     const respostaPix = await fetch(urlPix, {
       method:"GET",
@@ -80,11 +120,12 @@ export default async function handler(req, res){
     }
 
     const listaPix = dadosPix.pix || [];
+
     const pixEncontrado = listaPix.find(item =>
-  item.txid === txid ||
-  item.txId === txid ||
-  String(item.infoPagador || "").includes(txid)
-);
+      item.txid === txid ||
+      item.txId === txid ||
+      String(item.infoPagador || "").includes(txid)
+    );
 
     if(pixEncontrado){
       return res.status(200).json({
@@ -93,6 +134,7 @@ export default async function handler(req, res){
         status:"CONCLUIDA",
         txid,
         pix:pixEncontrado,
+        cobranca,
         dados:dadosPix
       });
     }
@@ -100,8 +142,9 @@ export default async function handler(req, res){
     return res.status(200).json({
       sucesso:true,
       pago:false,
-      status:"AGUARDANDO",
+      status:cobranca.status || "AGUARDANDO",
       txid,
+      cobranca,
       dados:dadosPix
     });
 
