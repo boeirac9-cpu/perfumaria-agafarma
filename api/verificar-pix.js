@@ -56,11 +56,10 @@ export default async function handler(req, res){
     const fim = new Date(Date.now() + 1000 * 60 * 10).toISOString();
 
     const urlPix =
-      `https://api-pix.bb.com.br/pix/v2/pix` +
-      `?inicio=${encodeURIComponent(inicio)}` +
-      `&fim=${encodeURIComponent(fim)}` +
-      `&txId=${encodeURIComponent(txid)}` +
-      `&gw-dev-app-key=${appKey}`;
+  `https://api-pix.bb.com.br/pix/v2/pix` +
+  `?inicio=${encodeURIComponent(inicio)}` +
+  `&fim=${encodeURIComponent(fim)}` +
+  `&gw-dev-app-key=${appKey}`;
 
     const respostaPix = await fetch(urlPix, {
       method:"GET",
@@ -81,7 +80,11 @@ export default async function handler(req, res){
     }
 
     const listaPix = dadosPix.pix || [];
-    const pixEncontrado = listaPix.find(item => item.txid === txid);
+    const pixEncontrado = listaPix.find(item =>
+  item.txid === txid ||
+  item.txId === txid ||
+  String(item.infoPagador || "").includes(txid)
+);
 
     if(pixEncontrado){
       return res.status(200).json({
