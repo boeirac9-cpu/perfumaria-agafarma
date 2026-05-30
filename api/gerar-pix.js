@@ -159,12 +159,27 @@ const corpoCobranca = {
       });
     }
 
-    const locId = cobranca.loc && cobranca.loc.id;
+    const pixCopiaECola = cobranca.pixCopiaECola;
+
+if(pixCopiaECola){
+  const imagemQrcode =
+    `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pixCopiaECola)}`;
+
+  return res.status(200).json({
+    sucesso:true,
+    txid,
+    valor:Number(valor).toFixed(2),
+    pixCopiaECola,
+    imagemQrcode,
+    cobrancaCompleta:cobranca
+  });
+}
+
+const locId = cobranca.loc && cobranca.loc.id;
 
 if(!locId){
   return res.status(500).json({
-    erro:"O Banco do Brasil criou a cobrança, mas não retornou loc.id para gerar QR Code dinâmico.",
-    detalhe:"Sem loc.id, o Pix cai na conta, mas não confirma automaticamente o pedido.",
+    erro:"O Banco do Brasil não retornou pixCopiaECola nem loc.id.",
     txid,
     cobrancaCompleta:cobranca
   });
