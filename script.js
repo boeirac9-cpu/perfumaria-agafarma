@@ -877,12 +877,11 @@ async function carregarMeusPedidos(){
     const minutos = criadoEm ? (new Date() - criadoEm) / 1000 / 60 : 999;
 
     const podeCancelar =
-      minutos <= 5 &&
-      pedido.status !== "Cancelado" &&
-      pedido.status !== "Cancelado pelo cliente" &&
-      pedido.status !== "Pago" &&
-      pedido.status !== "Concluído" &&
-      pedido.status !== "Concluido";
+  pedido.status !== "Cancelado" &&
+  pedido.status !== "Cancelado pelo cliente" &&
+  pedido.status !== "Pago" &&
+  pedido.status !== "Concluído" &&
+  pedido.status !== "Concluido";
 
     const div = document.createElement("div");
     div.classList.add("pedido-card");
