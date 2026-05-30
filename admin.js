@@ -168,14 +168,16 @@ async function carregarPedidos(){
   data.forEach(pedido => {
     let produtosHTML = "";
 
-    pedido.produtos.forEach(produto => {
-      produtosHTML += `
-        <li>
-          ${produto.nome} - Qtd: ${produto.quantidade}
-          - R$ ${(produto.preco * produto.quantidade).toFixed(2).replace(".", ",")}
-        </li>
-      `;
-    });
+    if(pedido.produtos && pedido.produtos.length > 0){
+      pedido.produtos.forEach(produto => {
+        produtosHTML += `
+          <li>
+            ${produto.nome} - Qtd: ${produto.quantidade}
+            - R$ ${(produto.preco * produto.quantidade).toFixed(2).replace(".", ",")}
+          </li>
+        `;
+      });
+    }
 
     const div = document.createElement("div");
     div.classList.add("pedido-card");
@@ -196,10 +198,88 @@ async function carregarPedidos(){
         <strong>Total:</strong>
         R$ ${Number(pedido.total).toFixed(2).replace(".", ",")}
       </p>
+
+      ${
+        pedido.status !== "Cancelado"
+        ? `
+          <button class="botao excluir-produto" onclick="cancelarPedidoAdmin(${pedido.id})">
+            Cancelar pedido e devolver estoque
+          </button>
+        `
+        : `
+          <p style="color:#d62828;font-weight:bold;">
+            Pedido cancelado
+          </p>
+        `
+      }
     `;
 
     listaPedidos.appendChild(div);
   });
+}
+
+async function cancelarPedidoAdmin(id){
+
+  if(!confirm("Cancelar este pedido e devolver os produtos ao estoque?")){
+    return;
+  }
+
+  const { data: pedido, error } = await supabaseClient
+    .from("pedidos")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(error || !pedido){
+    console.log(error);
+    alert("Erro ao localizar pedido.");
+    return;
+  }
+
+  if(pedido.status === "Cancelado"){
+    alert("Pedido já cancelado.");
+    return;
+  }
+
+  if(pedido.produtos && pedido.produtos.length > 0){
+    for(const item of pedido.produtos){
+
+      const { data: produtoAtual } = await supabaseClient
+        .from("produtos")
+        .select("quantidade")
+        .eq("id", item.id)
+        .single();
+
+      if(produtoAtual){
+        await supabaseClient
+          .from("produtos")
+          .update({
+            quantidade:
+              Number(produtoAtual.quantidade || 0) +
+              Number(item.quantidade || 0)
+          })
+          .eq("id", item.id);
+      }
+    }
+  }
+
+  const { error: erroStatus } = await supabaseClient
+    .from("pedidos")
+    .update({
+      status:"Cancelado"
+    })
+    .eq("id", id);
+
+  if(erroStatus){
+    console.log(erroStatus);
+    alert("Erro ao cancelar pedido.");
+    return;
+  }
+
+  alert("Pedido cancelado e estoque devolvido!");
+
+  carregarPedidos();
+  carregarProdutosAdmin();
 }
 
 /* IMAGEM MANUAL */
@@ -504,9 +584,7 @@ async function buscarSugestaoImagem(id, nome, codigo){
   const pesquisa = encodeURIComponent(`${nome} ${codigo} produto embalagem`);
 
   try{
-    const resposta = await fetch(
-  `/api/buscar-imagem?q=${pesquisa}`
-);
+    const resposta = await fetch(`/api/buscar-imagem?q=${pesquisa}`);
 
     const dados = await resposta.json();
 
@@ -694,7 +772,6 @@ async function carregarCuponsAdmin(){
 /* LIMPAR FORMULÁRIO */
 
 function limparFormulario(){
-
   document.getElementById("produtoCodigoBarras").value = "";
   document.getElementById("produtoNome").value = "";
   document.getElementById("produtoMarca").value = "";
@@ -705,8 +782,6 @@ function limparFormulario(){
   document.getElementById("produtoQuantidade").value = "";
   document.getElementById("produtoImagem").value = "";
   document.getElementById("previewImagem").src = "";
-
 }
-
 
 verificarAdmin();
