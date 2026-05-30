@@ -18,6 +18,10 @@
     Entrar / Cadastrar
   </button>
 
+  <button class="carrinho-btn" onclick="abrirMeusPedidos()">
+    Meus Pedidos
+  </button>
+
   <button class="carrinho-btn">
     🛒 Carrinho <span id="contador">0</span>
   </button>
@@ -155,6 +159,18 @@
     <button class="botao confirmar" onclick="enviarPedido()">
       Confirmar Pedido
     </button>
+  </div>
+</div>
+
+<div class="modal-finalizacao" id="modalMeusPedidos">
+  <div class="finalizacao-caixa">
+    <button class="fechar-finalizacao" onclick="fecharMeusPedidos()">×</button>
+
+    <h2>Meus Pedidos</h2>
+
+    <div id="listaMeusPedidos">
+      <p>Carregando pedidos...</p>
+    </div>
   </div>
 </div>
 
