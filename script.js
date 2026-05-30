@@ -951,7 +951,13 @@ async function cancelarPedidoCliente(pedidoId){
   }
 
   const criadoEm = pedido.created_at ? new Date(pedido.created_at) : null;
-  const minutos = criadoEm ? (new Date() - criadoEm) / 1000 / 60 : 999;
+  const minutos = criadoEm
+  ? Math.floor((Date.now() - criadoEm.getTime()) / 1000 / 60)
+  : 999;
+
+console.log("PEDIDO", pedido.id);
+console.log("CRIADO EM", pedido.created_at);
+console.log("MINUTOS", minutos);
 
   if(minutos > 5){
     alert("O prazo de 5 minutos para cancelamento acabou. Entre em contato com a farmácia.");
