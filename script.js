@@ -956,7 +956,7 @@ async function cancelarPedidoCliente(pedidoId){
   : 999;
 
 console.log("PEDIDO", pedido.id);
-console.log("CRIADO EM", pedido.created_at);
+console.log("PEDIDO COMPLETO", pedido);
 console.log("MINUTOS", minutos);
 
   if(minutos > 5){
