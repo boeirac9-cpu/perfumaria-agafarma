@@ -394,6 +394,23 @@ function criarModalLogin(){
   `;
 
   document.body.appendChild(modal);
+
+let tentativasPix = 0;
+
+const intervaloPix = setInterval(async () => {
+  tentativasPix++;
+
+  const confirmado = await verificarPagamentoPix(pedidoId, txid, true);
+
+  if(confirmado){
+    clearInterval(intervaloPix);
+    alert("✅ Pagamento confirmado! Seu pedido foi confirmado.");
+  }
+
+  if(tentativasPix >= 60){
+    clearInterval(intervaloPix);
+  }
+}, 5000);
 }
 
 function abrirLogin(){
@@ -963,7 +980,7 @@ async function cancelarPedidoCliente(pedidoId){
   carregarMeusPedidos();
   carregarProdutos();
 }
-async function verificarPagamentoPix(pedidoId, txid){
+async function verificarPagamentoPix(pedidoId, txid, automatico = false){
 
   if(!txid || txid === "null"){
     alert("Este pedido ainda não tem TXID do Pix.");
@@ -980,9 +997,11 @@ async function verificarPagamentoPix(pedidoId, txid){
   }
 
   if(!dados.pago){
+  if(!automatico){
     alert("Pagamento ainda não confirmado.");
-    return;
   }
+  return false;
+}
 
   const { data: pedido, error } = await supabaseClient
     .from("pedidos")
@@ -1027,8 +1046,12 @@ async function verificarPagamentoPix(pedidoId, txid){
     })
     .eq("id", pedidoId);
 
+  if(!automatico){
   alert("Pagamento confirmado! Pedido marcado como Pago.");
+}
 
-  carregarMeusPedidos();
-  carregarProdutos();
+carregarMeusPedidos();
+carregarProdutos();
+
+return true;
 }
