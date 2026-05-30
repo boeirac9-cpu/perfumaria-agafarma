@@ -394,23 +394,6 @@ function criarModalLogin(){
   `;
 
   document.body.appendChild(modal);
-
-let tentativasPix = 0;
-
-const intervaloPix = setInterval(async () => {
-  tentativasPix++;
-
-  const confirmado = await verificarPagamentoPix(pedidoId, txid, true);
-
-  if(confirmado){
-    clearInterval(intervaloPix);
-    alert("✅ Pagamento confirmado! Seu pedido foi confirmado.");
-  }
-
-  if(tentativasPix >= 60){
-    clearInterval(intervaloPix);
-  }
-}, 5000);
 }
 
 function abrirLogin(){
@@ -582,6 +565,24 @@ function mostrarPixNaTela(pix, pedidoId){
   `;
 
   document.body.appendChild(modal);
+
+let tentativasPix = 0;
+const txid = String(pix.txid || "");
+
+const intervaloPix = setInterval(async () => {
+  tentativasPix++;
+
+  const confirmado = await verificarPagamentoPix(pedidoId, txid, true);
+
+  if(confirmado){
+    clearInterval(intervaloPix);
+    alert("✅ Pagamento confirmado! Seu pedido foi confirmado.");
+  }
+
+  if(tentativasPix >= 60){
+    clearInterval(intervaloPix);
+  }
+}, 5000);
 }
 
 function copiarPixGerado(){
