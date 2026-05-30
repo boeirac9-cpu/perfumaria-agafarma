@@ -537,22 +537,24 @@ function mostrarPixNaTela(pix, pedidoId){
         Escaneie o QR Code ou copie o Pix Copia e Cola abaixo.
       </p>
 
-      ${imagemQr}
+      <div id="pixContainer">
+  ${imagemQr}
 
-      <label>Pix Copia e Cola</label>
+  <label>Pix Copia e Cola</label>
 
-      <textarea
-        id="pixCopiaEColaGerado"
-        readonly
-        style="height:130px;"
-      >${copiaCola}</textarea>
+  <textarea
+    id="pixCopiaEColaGerado"
+    readonly
+    style="height:130px;"
+  >${copiaCola}</textarea>
 
-      <button
-        class="botao confirmar"
-        onclick="copiarPixGerado()"
-      >
-        Copiar Pix
-      </button>
+  <button
+    class="botao confirmar"
+    onclick="copiarPixGerado()"
+  >
+    Copiar Pix
+  </button>
+</div>
 
       <button
         class="botao"
@@ -582,7 +584,30 @@ const intervaloPix = setInterval(async () => {
 
   if(confirmado){
     clearInterval(intervaloPix);
-    alert("✅ Pagamento confirmado! Seu pedido foi confirmado.");
+    document.getElementById("pixContainer").innerHTML = `
+  <div style="
+    text-align:center;
+    padding:40px 20px;
+  ">
+    <div style="
+      font-size:90px;
+      margin-bottom:10px;
+    ">
+      ✅
+    </div>
+
+    <h2 style="
+      color:#16a34a;
+      margin-bottom:10px;
+    ">
+      Pagamento Confirmado
+    </h2>
+
+    <p>
+      Seu pedido foi recebido com sucesso.
+    </p>
+  </div>
+`;
   }
 
   if(tentativasPix >= 60){
