@@ -666,7 +666,10 @@ async function enviarPedido(){
       endereco: enderecoPedido,
       total: Number(totalFinal.toFixed(2)),
       status: ehPix ? "Aguardando pagamento PIX" : "Novo pedido",
-      cupom: cupomAtual ? cupomAtual.codigo : null
+cupom: cupomAtual ? cupomAtual.codigo : null,
+pix_txid: null,
+pix_pago: false,
+estoque_baixado: false
     }])
     .select()
     .single();
@@ -681,11 +684,18 @@ async function enviarPedido(){
     try{
       const pix = await gerarPixPedido(totalFinal, nomeCliente, data.id);
 
-      await baixarEstoque();
+      await supabaseClient
+  .from("pedidos")
+  .update({
+    pix_txid: pix.txid,
+    status: "Aguardando pagamento PIX",
+    estoque_baixado: false
+  })
+  .eq("id", data.id);
 
-      limparCarrinhoDepoisPedido();
+limparCarrinhoDepoisPedido();
 
-      mostrarPixNaTela(pix, data.id);
+mostrarPixNaTela(pix, data.id);
 
     }catch(erroPix){
       console.log(erroPix);
@@ -703,9 +713,16 @@ async function enviarPedido(){
 
   await baixarEstoque();
 
-  alert(`Pedido enviado!\nNúmero: #${data.id}`);
+await supabaseClient
+  .from("pedidos")
+  .update({
+    estoque_baixado: true
+  })
+  .eq("id", data.id);
 
-  limparCarrinhoDepoisPedido();
+alert(`Pedido enviado!\nNúmero: #${data.id}`);
+
+limparCarrinhoDepoisPedido();
 }
 
 function limparCarrinhoDepoisPedido(){
@@ -819,22 +836,36 @@ async function carregarMeusPedidos(){
       <ul>${produtosHTML}</ul>
 
       ${
-        podeCancelar
-        ? `
-          <button
-            class="botao"
-            style="background:#d62828;margin-top:10px;"
-            onclick="cancelarPedidoCliente(${pedido.id})"
-          >
-            Cancelar pedido
-          </button>
-        `
-        : `
-          <p style="color:#777;font-size:14px;">
-            Cancelamento disponível apenas até 5 minutos após o pedido.
-          </p>
-        `
-      }
+  pedido.pagamento === "Pix" && pedido.status === "Aguardando pagamento PIX"
+  ? `
+    <button
+      class="botao confirmar"
+      style="margin-top:10px;"
+      onclick="verificarPagamentoPix(${pedido.id}, '${pedido.pix_txid}')"
+    >
+      Verificar pagamento PIX
+    </button>
+  `
+  : ""
+}
+
+${
+  podeCancelar
+  ? `
+    <button
+      class="botao"
+      style="background:#d62828;margin-top:10px;"
+      onclick="cancelarPedidoCliente(${pedido.id})"
+    >
+      Cancelar pedido
+    </button>
+  `
+  : `
+    <p style="color:#777;font-size:14px;">
+      Cancelamento disponível apenas até 5 minutos após o pedido.
+    </p>
+  `
+}
     `;
 
     lista.appendChild(div);
@@ -916,6 +947,75 @@ async function cancelarPedidoCliente(pedidoId){
   }
 
   alert("Pedido cancelado com sucesso e estoque devolvido!");
+
+  carregarMeusPedidos();
+  carregarProdutos();
+}
+async function verificarPagamentoPix(pedidoId, txid){
+
+  if(!txid || txid === "null"){
+    alert("Este pedido ainda não tem TXID do Pix.");
+    return;
+  }
+
+  const resposta = await fetch(`/api/verificar-pix?txid=${encodeURIComponent(txid)}`);
+  const dados = await resposta.json();
+
+  if(!resposta.ok){
+    console.log(dados);
+    alert("Erro ao verificar pagamento Pix.");
+    return;
+  }
+
+  if(!dados.pago){
+    alert("Pagamento ainda não confirmado.");
+    return;
+  }
+
+  const { data: pedido, error } = await supabaseClient
+    .from("pedidos")
+    .select("*")
+    .eq("id", pedidoId)
+    .single();
+
+  if(error || !pedido){
+    alert("Erro ao localizar pedido.");
+    return;
+  }
+
+  if(!pedido.estoque_baixado){
+    for(const item of pedido.produtos || []){
+      const { data: produtoAtual } = await supabaseClient
+        .from("produtos")
+        .select("quantidade")
+        .eq("id", item.id)
+        .single();
+
+      if(produtoAtual){
+        await supabaseClient
+          .from("produtos")
+          .update({
+            quantidade: Math.max(
+              0,
+              Number(produtoAtual.quantidade || 0) - Number(item.quantidade || 0)
+            )
+          })
+          .eq("id", item.id);
+      }
+    }
+  }
+
+  await supabaseClient
+    .from("pedidos")
+    .update({
+      status:"Pago",
+      pix_pago:true,
+      pix_pago_em:new Date().toISOString(),
+      estoque_baixado:true
+    })
+    .eq("id", pedidoId);
+
+  alert("Pagamento confirmado! Pedido marcado como Pago.");
 
   carregarMeusPedidos();
   carregarProdutos();
