@@ -910,28 +910,19 @@ function extrairProdutosEstoque0014(linhas){
 }
 
 function extrairPrecos0003(linhas){
-  console.log("TESTE PREÇO LINHA 12:", linhas[12]);
-  console.log("TESTE PREÇO LINHA 13:", linhas[13]);
-  console.log("TESTE PREÇO LINHA 14:", linhas[14]);
-  console.log("TESTE PREÇO LINHA 15:", linhas[15]);
-  console.log("TESTE PREÇO LINHA 16:", linhas[16]);
-
   const mapaPrecos = {};
 
   linhas.forEach(linha => {
-    const nome = String(linha[2] || "").trim();
 
-    const preco =
-      dinheiroParaNumero(linha[15]) ||
-      dinheiroParaNumero(linha[14]) ||
-      dinheiroParaNumero(linha[13]) ||
-      0;
+    const nome = String(linha[3] || "").trim();
+
+    const preco = Number(linha[13] || 0);
 
     if(!nome){
       return;
     }
 
-    if(nome.toUpperCase().includes("DESCRI")){
+    if(nome.toUpperCase().includes("DESCRICAO")){
       return;
     }
 
@@ -939,8 +930,10 @@ function extrairPrecos0003(linhas){
       return;
     }
 
-    const chave = normalizarTexto(nome);
-    mapaPrecos[chave] = preco;
+    mapaPrecos[
+      normalizarTexto(nome)
+    ] = preco;
+
   });
 
   return mapaPrecos;
