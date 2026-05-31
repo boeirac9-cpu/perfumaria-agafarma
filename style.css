@@ -729,3 +729,38 @@ header{
   max-width:100%;
   box-sizing:border-box;
 }
+.botao-cupons-mobile{
+  display:none;
+}
+
+.area-cupons-fechada{
+  display:block;
+}
+
+@media(max-width:768px){
+  .botao-cupons-mobile{
+    display:block;
+    width:100%;
+    background:#ffd400;
+    color:#0057b8;
+    border:none;
+    border-radius:16px;
+    padding:12px;
+    font-weight:900;
+    font-size:15px;
+    margin-bottom:10px;
+  }
+
+  .area-cupons-fechada{
+    display:none;
+  }
+
+  .cupons-cliente{
+    padding:0 10px 12px;
+  }
+
+  .cupom-card{
+    width:100%;
+    margin:0 0 8px 0;
+  }
+}

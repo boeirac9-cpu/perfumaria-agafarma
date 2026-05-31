@@ -1098,3 +1098,12 @@ carregarProdutos();
 
 return true;
 }
+function abrirFecharCupons(){
+  const area = document.getElementById("areaCuponsCliente");
+
+  if(!area){
+    return;
+  }
+
+  area.classList.toggle("area-cupons-fechada");
+}
