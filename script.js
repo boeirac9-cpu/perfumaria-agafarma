@@ -927,9 +927,9 @@ ${
 
 async function cancelarPedidoCliente(pedidoId){
 
-  if(!confirm("Deseja cancelar este pedido? O estoque será devolvido.")){
-    return;
-  }
+  if(!confirm("Deseja cancelar este pedido?")){
+  return;
+}
 
   const { data: pedido, error } = await supabaseClient
     .from("pedidos")
@@ -970,27 +970,34 @@ console.log("MINUTOS", minutos);
     return;
   }
 
-  if(pedido.produtos && pedido.produtos.length > 0){
-    for(const item of pedido.produtos){
+  const deveDevolverEstoque =
+  pedido.status !== "Aguardando pagamento" &&
+  pedido.status !== "Pix pendente" &&
+  pedido.status !== "Pendente";
 
-      const { data: produtoAtual } = await supabaseClient
+if(deveDevolverEstoque && pedido.produtos && pedido.produtos.length > 0){
+
+  for(const item of pedido.produtos){
+
+    const { data: produtoAtual } = await supabaseClient
+      .from("produtos")
+      .select("quantidade")
+      .eq("id", item.id)
+      .single();
+
+    if(produtoAtual){
+      await supabaseClient
         .from("produtos")
-        .select("quantidade")
-        .eq("id", item.id)
-        .single();
-
-      if(produtoAtual){
-        await supabaseClient
-          .from("produtos")
-          .update({
-            quantidade:
-              Number(produtoAtual.quantidade || 0) +
-              Number(item.quantidade || 0)
-          })
-          .eq("id", item.id);
-      }
+        .update({
+          quantidade:
+            Number(produtoAtual.quantidade || 0) +
+            Number(item.quantidade || 0)
+        })
+        .eq("id", item.id);
     }
   }
+
+}
 
   const { error: erroCancelar } = await supabaseClient
     .from("pedidos")
