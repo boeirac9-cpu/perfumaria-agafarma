@@ -159,6 +159,7 @@ async function carregarPedidos(){
   const { data, error } = await supabaseClient
   .from("pedidos")
   .select("*")
+  .neq("status", "Aguardando pagamento PIX")
   .neq("status", "Cancelado pelo cliente")
   .neq("status", "Cancelado")
   .order("id", { ascending:false });
