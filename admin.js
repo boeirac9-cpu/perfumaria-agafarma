@@ -931,7 +931,13 @@ function extrairPrecos0003(linhas){
 
     if(preco <= 0) return;
 
-    mapaPrecos[normalizarTexto(nome)] = preco;
+    const codigo = String(linha[1] || "").trim();
+
+if(!codigo){
+  return;
+}
+
+mapaPrecos[codigo] = preco;
   });
 
   console.log("TOTAL DE PREÇOS LIDOS:", Object.keys(mapaPrecos).length);
@@ -967,7 +973,7 @@ async function importarXLSComPrecos(){
     let semPreco = 0;
 
     for(const produto of produtosEstoque){
-      const precoEncontrado = mapaPrecos[produto.chaveNome] || 0;
+      const precoEncontrado = mapaPrecos[produto.codigo] || 0;
 
       if(precoEncontrado > 0){
         comPreco++;
