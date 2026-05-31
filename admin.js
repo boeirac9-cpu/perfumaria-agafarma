@@ -872,27 +872,83 @@ function pegarCategoriaAtual(linha){
 function definirCategoriaPeloNome(nome){
   const n = normalizarTexto(nome);
 
-  if(n.includes("SHAMPOO") || n.includes("CONDICIONADOR") || n.includes("CREMEPENTEAR") || n.includes("MASCARA") || n.includes("TINHA") || n.includes("COLORACAO")){
+  if(
+    n.includes("SHAMPOO") ||
+    n.includes("CONDICIONADOR") ||
+    n.includes("MASCARA") ||
+    n.includes("CREMEPENTEAR") ||
+    n.includes("TINTURA") ||
+    n.includes("COLORACAO") ||
+    n.includes("TONALIZANTE")
+  ){
     return "cabelo";
   }
 
-  if(n.includes("PERFUME") || n.includes("DEOCOLONIA") || n.includes("COLONIA")){
+  if(
+    n.includes("PERFUME") ||
+    n.includes("COLONIA") ||
+    n.includes("DEOCOLONIA")
+  ){
     return "perfumes";
   }
 
-  if(n.includes("BATOM") || n.includes("BASE") || n.includes("RIMEL") || n.includes("MAQUIAGEM")){
-    return "maquiagem";
-  }
-
-  if(n.includes("PROTETOR") || n.includes("HIDRATANTEFACIAL") || n.includes("SKINCARE")){
-    return "skincare";
-  }
-
-  if(n.includes("FRALDA") || n.includes("BABY") || n.includes("INFANTIL")){
+  if(
+    n.includes("FRALDA") ||
+    n.includes("LENCOUMEDECIDO") ||
+    n.includes("MAMADEIRA") ||
+    n.includes("CHUPETA") ||
+    n.includes("BABY")
+  ){
     return "infantil";
   }
 
-  if(n.includes("SABONETE") || n.includes("CREME") || n.includes("DESODORANTE") || n.includes("ABSORVENTE") || n.includes("ESCOVA") || n.includes("PASTA")){
+  if(
+    n.includes("LEITE") ||
+    n.includes("NAN") ||
+    n.includes("NESTOGENO") ||
+    n.includes("APTAMIL")
+  ){
+    return "leites";
+  }
+
+  if(
+    n.includes("BATOM") ||
+    n.includes("BASE") ||
+    n.includes("RIMEL") ||
+    n.includes("MAQUIAGEM") ||
+    n.includes("ESMALTE")
+  ){
+    return "maquiagem";
+  }
+
+  if(
+    n.includes("PROTETOR") ||
+    n.includes("SOLAR") ||
+    n.includes("FACIAL") ||
+    n.includes("SKINCARE") ||
+    n.includes("SERUM")
+  ){
+    return "skincare";
+  }
+
+  if(
+    n.includes("HIDRATANTE") ||
+    n.includes("CREMECORPORAL") ||
+    n.includes("OLEO") ||
+    n.includes("LOCAO")
+  ){
+    return "corpo";
+  }
+
+  if(
+    n.includes("SABONETE") ||
+    n.includes("DESODORANTE") ||
+    n.includes("ABSORVENTE") ||
+    n.includes("ESCOVA") ||
+    n.includes("PASTA") ||
+    n.includes("FIO") ||
+    n.includes("ENXAGUANTE")
+  ){
     return "higiene";
   }
 
