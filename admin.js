@@ -914,23 +914,17 @@ function extrairPrecos0003(linhas){
 
   linhas.forEach(linha => {
     const nome = String(linha[3] || "").trim();
-    const preco = Number(linha[13] || 0);
+    const preco = dinheiroParaNumero(linha[13]);
 
-    if(!nome){
-      return;
-    }
+    if(!nome) return;
+    if(nome.toUpperCase().includes("DESCRICAO")) return;
+    if(preco <= 0) return;
 
-    if(nome.toUpperCase().includes("DESCRICAO")){
-      return;
-    }
-
-    if(preco <= 0){
-      return;
-    }
-
-    const chave = normalizarTexto(nome);
-    mapaPrecos[chave] = preco;
+    mapaPrecos[normalizarTexto(nome)] = preco;
   });
+
+  console.log("TOTAL DE PREÇOS LIDOS:", Object.keys(mapaPrecos).length);
+  console.log("AMOSTRA PREÇOS:", Object.entries(mapaPrecos).slice(0, 10));
 
   return mapaPrecos;
 }
