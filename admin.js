@@ -869,7 +869,35 @@ function pegarCategoriaAtual(linha){
 
   return null;
 }
+function definirCategoriaPeloNome(nome){
+  const n = normalizarTexto(nome);
 
+  if(n.includes("SHAMPOO") || n.includes("CONDICIONADOR") || n.includes("CREMEPENTEAR") || n.includes("MASCARA") || n.includes("TINHA") || n.includes("COLORACAO")){
+    return "cabelo";
+  }
+
+  if(n.includes("PERFUME") || n.includes("DEOCOLONIA") || n.includes("COLONIA")){
+    return "perfumes";
+  }
+
+  if(n.includes("BATOM") || n.includes("BASE") || n.includes("RIMEL") || n.includes("MAQUIAGEM")){
+    return "maquiagem";
+  }
+
+  if(n.includes("PROTETOR") || n.includes("HIDRATANTEFACIAL") || n.includes("SKINCARE")){
+    return "skincare";
+  }
+
+  if(n.includes("FRALDA") || n.includes("BABY") || n.includes("INFANTIL")){
+    return "infantil";
+  }
+
+  if(n.includes("SABONETE") || n.includes("CREME") || n.includes("DESODORANTE") || n.includes("ABSORVENTE") || n.includes("ESCOVA") || n.includes("PASTA")){
+    return "higiene";
+  }
+
+  return "higiene";
+}
 function extrairProdutosEstoque0014(linhas){
   const produtos = [];
   let categoriaAtual = "higiene";
@@ -913,7 +941,7 @@ function extrairProdutosEstoque0014(linhas){
       nome,
       laboratorio,
       marca: laboratorio,
-      categoria: categoriaAtual || "higiene",
+      categoria: definirCategoriaPeloNome(nome),
       quantidade,
       chaveNome: normalizarTexto(nome)
     });
