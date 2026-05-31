@@ -66,6 +66,8 @@ function abrirPainelAdmin(){
   carregarPedidos();
   carregarProdutosAdmin();
   carregarCuponsAdmin();
+
+  iniciarImpressaoAutomatica();
 }
 
 async function sairAdmin(){
@@ -1212,5 +1214,109 @@ async function buscarSugestoesParaTodosSemImagem(){
   status.innerHTML = `
     Sugestões carregadas para ${processados} produtos.
   `;
+}
+let ultimoPedidoImpressoId = Number(localStorage.getItem("ultimoPedidoImpressoId")) || 0;
+
+function iniciarImpressaoAutomatica(){
+  setInterval(async () => {
+    const { data, error } = await supabaseClient
+      .from("pedidos")
+      .select("*")
+      .neq("status", "Aguardando pagamento PIX")
+      .neq("status", "Cancelado")
+      .neq("status", "Cancelado pelo cliente")
+      .order("id", { ascending:false })
+      .limit(1);
+
+    if(error || !data || data.length === 0){
+      return;
+    }
+
+    const pedido = data[0];
+
+    if(pedido.id > ultimoPedidoImpressoId){
+      ultimoPedidoImpressoId = pedido.id;
+      localStorage.setItem("ultimoPedidoImpressoId", pedido.id);
+
+      imprimirPedidoAutomatico(pedido);
+    }
+  }, 5000);
+}
+
+function imprimirPedidoAutomatico(pedido){
+  let produtosTexto = "";
+
+  if(pedido.produtos && pedido.produtos.length > 0){
+    pedido.produtos.forEach(item => {
+      produtosTexto += `
+${item.quantidade}x ${item.nome}
+R$ ${(item.preco * item.quantidade).toFixed(2).replace(".", ",")}
+---------------------------
+`;
+    });
+  }
+
+  const conteudo = `
+AGAFARMA LAGOA VERMELHA
+===========================
+
+PEDIDO #${pedido.id}
+
+Cliente: ${pedido.cliente}
+Telefone: ${pedido.telefone_login || "Não informado"}
+
+Entrega: ${pedido.tipo_entrega}
+Pagamento: ${pedido.pagamento}
+Status: ${pedido.status}
+
+---------------------------
+PRODUTOS
+---------------------------
+${produtosTexto}
+
+TOTAL: R$ ${Number(pedido.total).toFixed(2).replace(".", ",")}
+
+Observações:
+${pedido.observacoes || "Nenhuma"}
+
+===========================
+`;
+
+  const janela = window.open("", "_blank", "width=400,height=600");
+
+  janela.document.write(`
+    <html>
+      <head>
+        <title>Pedido #${pedido.id}</title>
+        <style>
+          body{
+            font-family: monospace;
+            font-size: 13px;
+            width: 280px;
+            margin: 0;
+            padding: 8px;
+          }
+
+          pre{
+            white-space: pre-wrap;
+          }
+        </style>
+      </head>
+      <body>
+        <pre>${conteudo}</pre>
+
+        <script>
+          window.onload = function(){
+            window.print();
+            setTimeout(function(){
+              window.close();
+            }, 1000);
+          };
+        <\/script>
+      </body>
+    </html>
+  `);
+
+  janela.document.close();
 }
 verificarAdmin();
