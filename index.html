@@ -129,10 +129,19 @@
     <input type="text" id="nomeCliente" placeholder="Digite seu nome">
 
     <label>Como deseja receber?</label>
-    <select id="tipoEntrega" onchange="mostrarEndereco()">
-      <option value="retirada">Retirar na farmácia</option>
-      <option value="tele">Pedir tele-entrega</option>
-    </select>
+    <select id="tipoEntrega" onchange="mostrarEndereco(); mostrarTaxaEntrega();">
+  <option value="retirada">Retirar na farmácia</option>
+  <option value="tele">Pedir tele-entrega</option>
+</select>
+
+<p id="avisoTaxaEntrega" style="
+  display:none;
+  color:#0d6efd;
+  font-weight:bold;
+  margin-top:8px;
+">
+  🚚 Taxa de entrega: R$ 10,00
+</p>
 
     <div id="camposEndereco" class="campos-endereco">
       <label>Endereço</label>

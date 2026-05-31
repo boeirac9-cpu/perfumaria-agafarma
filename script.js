@@ -1150,3 +1150,16 @@ function mostrarTroco(){
       ? "block"
       : "none";
 }
+function mostrarTaxaEntrega(){
+  const tipoEntrega = document.getElementById("tipoEntrega").value;
+  const aviso = document.getElementById("avisoTaxaEntrega");
+
+  if(!aviso){
+    return;
+  }
+
+  aviso.style.display =
+    tipoEntrega === "tele"
+      ? "block"
+      : "none";
+}
