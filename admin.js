@@ -950,22 +950,21 @@ async function importarXLSComPrecos(){
     return;
   }
 
-  resultado.innerHTML = "<p>Importando arquivos...</p>";
+  resultado.innerHTML = "<p>Lendo arquivos...</p>";
 
   try{
     const linhasEstoque = await lerArquivoXLS(arquivoEstoque);
     const linhasPrecos = await lerArquivoXLS(arquivoPrecos);
 
-    console.log("LINHAS ESTOQUE 0014:", linhasEstoque.slice(0, 30));
-console.log("LINHAS PREÇOS 0003:", linhasPrecos.slice(0, 30));
-
     const produtosEstoque = extrairProdutosEstoque0014(linhasEstoque);
     const mapaPrecos = extrairPrecos0003(linhasPrecos);
 
+    console.log("Produtos extraídos do 0014:", produtosEstoque.slice(0, 10));
+    console.log("Preços extraídos do 0003:", Object.entries(mapaPrecos).slice(0, 10));
+
+    const produtosParaSalvar = [];
     let comPreco = 0;
     let semPreco = 0;
-    let novos = 0;
-    let atualizados = 0;
 
     for(const produto of produtosEstoque){
       const precoEncontrado = mapaPrecos[produto.chaveNome] || 0;
@@ -976,53 +975,46 @@ console.log("LINHAS PREÇOS 0003:", linhasPrecos.slice(0, 30));
         semPreco++;
       }
 
-      const produtoParaSalvar = {
+      produtosParaSalvar.push({
         codigo: produto.codigo,
         nome: produto.nome,
         laboratorio: produto.laboratorio,
         marca: produto.marca,
-        quantidade: produto.quantidade
-      };
+        quantidade: produto.quantidade,
+        valor: precoEncontrado > 0 ? precoEncontrado : 0,
+        desconto: 0,
+        imagem: "logo.png",
+        descricao: "",
+        categoria: produto.categoria || "higiene",
+        promocao: false
+      });
+    }
 
-      if(precoEncontrado > 0){
-        produtoParaSalvar.valor = precoEncontrado;
-      }
+    resultado.innerHTML = `<p>Salvando ${produtosParaSalvar.length} produtos...</p>`;
 
-      const { data: existente } = await supabaseClient
+    const tamanhoLote = 300;
+    let salvos = 0;
+
+    for(let i = 0; i < produtosParaSalvar.length; i += tamanhoLote){
+      const lote = produtosParaSalvar.slice(i, i + tamanhoLote);
+
+      const { error } = await supabaseClient
         .from("produtos")
-        .select("id")
-        .eq("codigo", produto.codigo)
-        .maybeSingle();
+        .upsert(lote, {
+          onConflict: "codigo"
+        });
 
-      if(existente){
-        const { error } = await supabaseClient
-          .from("produtos")
-          .update(produtoParaSalvar)
-          .eq("id", existente.id);
-
-        if(error){
-          console.log(error);
-        } else {
-          atualizados++;
-        }
-
-      } else {
-        produtoParaSalvar.descricao = "";
-        produtoParaSalvar.desconto = 0;
-        produtoParaSalvar.categoria = produto.categoria;
-        produtoParaSalvar.imagem = "logo.png";
-        produtoParaSalvar.promocao = false;
-
-        const { error } = await supabaseClient
-          .from("produtos")
-          .insert([produtoParaSalvar]);
-
-        if(error){
-          console.log(error);
-        } else {
-          novos++;
-        }
+      if(error){
+        console.log(error);
+        resultado.innerHTML = `
+          <p><strong>Erro ao salvar lote.</strong></p>
+          <p>${error.message}</p>
+        `;
+        return;
       }
+
+      salvos += lote.length;
+      resultado.innerHTML = `<p>Salvando produtos... ${salvos}/${produtosParaSalvar.length}</p>`;
     }
 
     resultado.innerHTML = `
@@ -1030,8 +1022,7 @@ console.log("LINHAS PREÇOS 0003:", linhasPrecos.slice(0, 30));
       <p>Produtos do 0014: ${produtosEstoque.length}</p>
       <p>Com preço encontrado no 0003: ${comPreco}</p>
       <p>Sem preço: ${semPreco}</p>
-      <p>Produtos novos: ${novos}</p>
-      <p>Produtos atualizados: ${atualizados}</p>
+      <p>Produtos salvos/atualizados: ${salvos}</p>
     `;
 
     carregarProdutosAdmin();
@@ -1039,7 +1030,10 @@ console.log("LINHAS PREÇOS 0003:", linhasPrecos.slice(0, 30));
 
   }catch(erro){
     console.log(erro);
-    resultado.innerHTML = "<p>Erro ao importar XLS. Veja o console.</p>";
+    resultado.innerHTML = `
+      <p><strong>Erro ao importar XLS.</strong></p>
+      <p>${erro.message || erro}</p>
+    `;
   }
 }
 verificarAdmin();
