@@ -46,6 +46,7 @@
 <section class="abas-admin">
   <button onclick="mostrarAba('pedidos')">Pedidos</button>
   <button onclick="mostrarAba('produtos')">Adicionar Produto</button>
+  <button onclick="mostrarAba('xls')">Importar XLS</button>
   <button onclick="mostrarAba('cupons')">Cupons</button>
   <button onclick="mostrarAba('imagens')">Produtos sem imagem</button>
 </section>
@@ -115,6 +116,23 @@
   <h2 class="titulo-admin">Produtos Cadastrados</h2>
   <div id="listaProdutosAdmin"></div>
 </section>
+<section class="admin-area escondido" id="abaXls">
+  <h2 class="titulo-admin">Importar XLS da Trier</h2>
+
+  <div class="form-produto">
+    <label>XLS 0014 - Estoque / Produtos</label>
+    <input type="file" id="xlsEstoque" accept=".xls,.xlsx">
+
+    <label>XLS 0003 - Lista de Preços</label>
+    <input type="file" id="xlsPrecos" accept=".xls,.xlsx">
+
+    <button class="botao confirmar" onclick="importarXLSComPrecos()">
+      Importar e atualizar catálogo
+    </button>
+
+    <div id="resultadoImportacao" style="margin-top:15px;"></div>
+  </div>
+</section>
 
 <section class="admin-area escondido" id="abaCupons">
   <h2 class="titulo-admin">Criar Cupom</h2>
@@ -165,6 +183,7 @@
   );
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="admin.js"></script>
 
 </body>

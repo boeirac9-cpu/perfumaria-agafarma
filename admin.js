@@ -80,7 +80,12 @@ function mostrarAba(aba){
   document.getElementById("abaProdutos").classList.add("escondido");
   document.getElementById("abaCupons").classList.add("escondido");
 
+  const abaXls = document.getElementById("abaXls");
   const abaImagens = document.getElementById("abaImagens");
+
+  if(abaXls){
+    abaXls.classList.add("escondido");
+  }
 
   if(abaImagens){
     abaImagens.classList.add("escondido");
@@ -94,6 +99,10 @@ function mostrarAba(aba){
   if(aba === "produtos"){
     document.getElementById("abaProdutos").classList.remove("escondido");
     carregarProdutosAdmin();
+  }
+
+  if(aba === "xls" && abaXls){
+    abaXls.classList.remove("escondido");
   }
 
   if(aba === "cupons"){
@@ -783,5 +792,230 @@ function limparFormulario(){
   document.getElementById("produtoImagem").value = "";
   document.getElementById("previewImagem").src = "";
 }
+/* IMPORTAR XLS 0014 + 0003 */
 
+function normalizarTexto(texto){
+  return String(texto || "")
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+function dinheiroParaNumero(valor){
+  if(valor === null || valor === undefined || valor === ""){
+    return 0;
+  }
+
+  if(typeof valor === "number"){
+    return valor;
+  }
+
+  return Number(
+    String(valor)
+      .replace("R$", "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .trim()
+  ) || 0;
+}
+
+function lerArquivoXLS(arquivo){
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+
+    leitor.onload = function(e){
+      try{
+        const dados = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(dados, { type:"array" });
+        const primeiraAba = workbook.SheetNames[0];
+        const planilha = workbook.Sheets[primeiraAba];
+
+        const linhas = XLSX.utils.sheet_to_json(planilha, {
+          header: 1,
+          defval: ""
+        });
+
+        resolve(linhas);
+      }catch(erro){
+        reject(erro);
+      }
+    };
+
+    leitor.onerror = reject;
+    leitor.readAsArrayBuffer(arquivo);
+  });
+}
+
+function pegarCategoriaAtual(linha){
+  const texto = linha.join(" ").trim();
+
+  if(texto.toUpperCase().includes("CATEGORIA")){
+    return texto.replace("CATEGORIA:", "").trim();
+  }
+
+  return null;
+}
+
+function extrairProdutosEstoque0014(linhas){
+  const produtos = [];
+  let categoriaAtual = "";
+
+  linhas.forEach(linha => {
+    const novaCategoria = pegarCategoriaAtual(linha);
+
+    if(novaCategoria){
+      categoriaAtual = novaCategoria;
+      return;
+    }
+
+    const codigoBarras = String(linha[0] || "").trim();
+    const nome = String(linha[1] || "").trim();
+    const laboratorio = String(linha[2] || "").trim();
+    const grupo = String(linha[3] || "").trim();
+    const quantidade = dinheiroParaNumero(linha[5]);
+
+    if(!nome || nome.toUpperCase().includes("DESCRI")){
+      return;
+    }
+
+    if(nome.length < 3){
+      return;
+    }
+
+    produtos.push({
+      codigo: codigoBarras,
+      nome,
+      laboratorio,
+      marca: laboratorio,
+      categoria: categoriaAtual || "higiene",
+      quantidade,
+      chaveNome: normalizarTexto(nome)
+    });
+  });
+
+  return produtos;
+}
+
+function extrairPrecos0003(linhas){
+  const mapaPrecos = {};
+
+  linhas.forEach(linha => {
+    const nome = String(linha[1] || "").trim();
+    const preco = dinheiroParaNumero(linha[5]);
+
+    if(!nome || nome.toUpperCase().includes("DESCRI")){
+      return;
+    }
+
+    if(preco <= 0){
+      return;
+    }
+
+    const chave = normalizarTexto(nome);
+    mapaPrecos[chave] = preco;
+  });
+
+  return mapaPrecos;
+}
+
+async function importarXLSComPrecos(){
+  const arquivoEstoque = document.getElementById("xlsEstoque").files[0];
+  const arquivoPrecos = document.getElementById("xlsPrecos").files[0];
+  const resultado = document.getElementById("resultadoImportacao");
+
+  if(!arquivoEstoque || !arquivoPrecos){
+    alert("Selecione o XLS 0014 e o XLS 0003.");
+    return;
+  }
+
+  resultado.innerHTML = "<p>Importando arquivos...</p>";
+
+  try{
+    const linhasEstoque = await lerArquivoXLS(arquivoEstoque);
+    const linhasPrecos = await lerArquivoXLS(arquivoPrecos);
+
+    const produtosEstoque = extrairProdutosEstoque0014(linhasEstoque);
+    const mapaPrecos = extrairPrecos0003(linhasPrecos);
+
+    let comPreco = 0;
+    let semPreco = 0;
+    let novos = 0;
+    let atualizados = 0;
+
+    for(const produto of produtosEstoque){
+      const precoEncontrado = mapaPrecos[produto.chaveNome] || 0;
+
+      if(precoEncontrado > 0){
+        comPreco++;
+      } else {
+        semPreco++;
+      }
+
+      const produtoParaSalvar = {
+        codigo: produto.codigo,
+        nome: produto.nome,
+        laboratorio: produto.laboratorio,
+        marca: produto.marca,
+        quantidade: produto.quantidade
+      };
+
+      if(precoEncontrado > 0){
+        produtoParaSalvar.valor = precoEncontrado;
+      }
+
+      const { data: existente } = await supabaseClient
+        .from("produtos")
+        .select("id")
+        .eq("codigo", produto.codigo)
+        .maybeSingle();
+
+      if(existente){
+        const { error } = await supabaseClient
+          .from("produtos")
+          .update(produtoParaSalvar)
+          .eq("id", existente.id);
+
+        if(error){
+          console.log(error);
+        } else {
+          atualizados++;
+        }
+
+      } else {
+        produtoParaSalvar.descricao = "";
+        produtoParaSalvar.desconto = 0;
+        produtoParaSalvar.categoria = produto.categoria;
+        produtoParaSalvar.imagem = "logo.png";
+        produtoParaSalvar.promocao = false;
+
+        const { error } = await supabaseClient
+          .from("produtos")
+          .insert([produtoParaSalvar]);
+
+        if(error){
+          console.log(error);
+        } else {
+          novos++;
+        }
+      }
+    }
+
+    resultado.innerHTML = `
+      <p><strong>Importação concluída!</strong></p>
+      <p>Produtos do 0014: ${produtosEstoque.length}</p>
+      <p>Com preço encontrado no 0003: ${comPreco}</p>
+      <p>Sem preço: ${semPreco}</p>
+      <p>Produtos novos: ${novos}</p>
+      <p>Produtos atualizados: ${atualizados}</p>
+    `;
+
+    carregarProdutosAdmin();
+    carregarProdutosSemImagem();
+
+  }catch(erro){
+    console.log(erro);
+    resultado.innerHTML = "<p>Erro ao importar XLS. Veja o console.</p>";
+  }
+}
 verificarAdmin();
