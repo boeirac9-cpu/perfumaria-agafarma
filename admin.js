@@ -913,9 +913,7 @@ function extrairPrecos0003(linhas){
   const mapaPrecos = {};
 
   linhas.forEach(linha => {
-
     const nome = String(linha[3] || "").trim();
-
     const preco = Number(linha[13] || 0);
 
     if(!nome){
@@ -930,10 +928,8 @@ function extrairPrecos0003(linhas){
       return;
     }
 
-    mapaPrecos[
-      normalizarTexto(nome)
-    ] = preco;
-
+    const chave = normalizarTexto(nome);
+    mapaPrecos[chave] = preco;
   });
 
   return mapaPrecos;
