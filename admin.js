@@ -935,6 +935,9 @@ async function importarXLSComPrecos(){
     const linhasEstoque = await lerArquivoXLS(arquivoEstoque);
     const linhasPrecos = await lerArquivoXLS(arquivoPrecos);
 
+    console.log("LINHAS ESTOQUE 0014:", linhasEstoque.slice(0, 30));
+console.log("LINHAS PREÇOS 0003:", linhasPrecos.slice(0, 30));
+
     const produtosEstoque = extrairProdutosEstoque0014(linhasEstoque);
     const mapaPrecos = extrairPrecos0003(linhasPrecos);
 
