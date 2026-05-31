@@ -157,9 +157,11 @@ async function carregarPedidos(){
   listaPedidos.innerHTML = "<p class='sem-pedidos'>Carregando pedidos...</p>";
 
   const { data, error } = await supabaseClient
-    .from("pedidos")
-    .select("*")
-    .order("id", { ascending:false });
+  .from("pedidos")
+  .select("*")
+  .neq("status", "Cancelado pelo cliente")
+  .neq("status", "Cancelado")
+  .order("id", { ascending:false });
 
   if(error){
     console.log(error);
