@@ -970,10 +970,11 @@ console.log("MINUTOS", minutos);
     return;
   }
 
-  const deveDevolverEstoque =
-  pedido.status !== "Aguardando pagamento" &&
-  pedido.status !== "Pix pendente" &&
-  pedido.status !== "Pendente";
+  const pagamentoPix = String(pedido.pagamento || "")
+  .toLowerCase()
+  .includes("pix");
+
+const deveDevolverEstoque = !pagamentoPix;
 
 if(deveDevolverEstoque && pedido.produtos && pedido.produtos.length > 0){
 
