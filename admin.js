@@ -859,23 +859,35 @@ function pegarCategoriaAtual(linha){
 
 function extrairProdutosEstoque0014(linhas){
   const produtos = [];
-  let categoriaAtual = "";
+  let categoriaAtual = "higiene";
 
   linhas.forEach(linha => {
-    const novaCategoria = pegarCategoriaAtual(linha);
+    const textoLinha = linha.join(" ").toUpperCase();
 
-    if(novaCategoria){
-      categoriaAtual = novaCategoria;
+    if(textoLinha.includes("CATEGORIA:")){
+      categoriaAtual = textoLinha
+        .replace("CATEGORIA:", "")
+        .trim()
+        .toLowerCase();
+
       return;
     }
 
-    const codigoBarras = String(linha[0] || "").trim();
-    const nome = String(linha[1] || "").trim();
-    const laboratorio = String(linha[2] || "").trim();
-    const grupo = String(linha[3] || "").trim();
-    const quantidade = dinheiroParaNumero(linha[5]);
+    const codigo = String(linha[1] || "").trim();
+    const nome = String(linha[2] || "").trim();
+    const laboratorio = String(linha[4] || "").trim();
 
-    if(!nome || nome.toUpperCase().includes("DESCRI")){
+    const quantidade =
+      dinheiroParaNumero(linha[15]) ||
+      dinheiroParaNumero(linha[16]) ||
+      dinheiroParaNumero(linha[17]) ||
+      0;
+
+    if(!codigo || !nome){
+      return;
+    }
+
+    if(nome.toUpperCase().includes("DESCRI")){
       return;
     }
 
@@ -884,7 +896,7 @@ function extrairProdutosEstoque0014(linhas){
     }
 
     produtos.push({
-      codigo: codigoBarras,
+      codigo,
       nome,
       laboratorio,
       marca: laboratorio,
@@ -901,10 +913,19 @@ function extrairPrecos0003(linhas){
   const mapaPrecos = {};
 
   linhas.forEach(linha => {
-    const nome = String(linha[1] || "").trim();
-    const preco = dinheiroParaNumero(linha[5]);
+    const nome = String(linha[2] || "").trim();
 
-    if(!nome || nome.toUpperCase().includes("DESCRI")){
+    const preco =
+      dinheiroParaNumero(linha[15]) ||
+      dinheiroParaNumero(linha[14]) ||
+      dinheiroParaNumero(linha[13]) ||
+      0;
+
+    if(!nome){
+      return;
+    }
+
+    if(nome.toUpperCase().includes("DESCRI")){
       return;
     }
 
