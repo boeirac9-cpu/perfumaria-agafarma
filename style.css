@@ -770,3 +770,21 @@ header{
     display:none;
   }
 }
+@media(max-width:768px){
+  .carrinho-lateral{
+    display:none;
+  }
+
+  .carrinho-lateral.ativo{
+    display:block;
+    position:fixed;
+    top:75px;
+    left:4%;
+    right:4%;
+    bottom:auto;
+    width:92%;
+    max-height:75vh;
+    overflow-y:auto;
+    z-index:3000;
+  }
+}

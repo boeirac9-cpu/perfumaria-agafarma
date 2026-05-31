@@ -1107,3 +1107,12 @@ function abrirFecharCupons(){
 
   area.classList.toggle("area-cupons-fechada");
 }
+function abrirFecharCarrinhoMobile(){
+  const carrinho = document.querySelector(".carrinho-lateral");
+
+  if(!carrinho){
+    return;
+  }
+
+  carrinho.classList.toggle("ativo");
+}
