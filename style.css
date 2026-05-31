@@ -764,3 +764,9 @@ header{
     margin:0 0 8px 0;
   }
 }
+@media(max-width:768px){
+  .carrinho-lateral .cupom-area,
+  .carrinho-lateral #cupomAplicado{
+    display:none;
+  }
+}
