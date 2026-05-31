@@ -588,7 +588,9 @@ async function carregarProdutosSemImagem(){
 async function buscarSugestaoImagem(id, nome, codigo){
   const area = document.getElementById(`areaSugestaoImagem${id}`);
 
-  area.innerHTML = "<p>Buscando imagem...</p>";
+  if(area){
+    area.innerHTML = "<p>Buscando imagem...</p>";
+  }
 
   const pesquisa = encodeURIComponent(`${nome} ${codigo} produto embalagem`);
 
@@ -600,8 +602,10 @@ async function buscarSugestaoImagem(id, nome, codigo){
     const imagens = dados.imagens || [];
 
     if(imagens.length === 0){
-      area.innerHTML = "<p>Nenhuma imagem encontrada.</p>";
-      return;
+      if(area){
+        area.innerHTML = "<p>Nenhuma imagem encontrada.</p>";
+      }
+      return false;
     }
 
     sugestoesImagem[id] = {
@@ -609,11 +613,20 @@ async function buscarSugestaoImagem(id, nome, codigo){
       indice:0
     };
 
-    mostrarSugestaoImagem(id);
+    if(area){
+      mostrarSugestaoImagem(id);
+    }
+
+    return true;
 
   }catch(erro){
     console.log(erro);
-    area.innerHTML = "<p>Erro ao buscar imagem.</p>";
+
+    if(area){
+      area.innerHTML = "<p>Erro ao buscar imagem.</p>";
+    }
+
+    return false;
   }
 }
 
