@@ -473,7 +473,11 @@ function sairConta(){
   alert("Conta desconectada.");
 }
 
-function abrirFinalizacao(){
+function abrirFinalizacao(){const carrinhoMobile = document.querySelector(".carrinho-lateral");
+
+if(carrinhoMobile){
+  carrinhoMobile.classList.remove("ativo");
+}
   if(carrinho.length === 0){
     alert("Adicione produtos no carrinho.");
     return;
