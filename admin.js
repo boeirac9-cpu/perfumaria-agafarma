@@ -910,6 +910,12 @@ function extrairProdutosEstoque0014(linhas){
 }
 
 function extrairPrecos0003(linhas){
+  console.log("TESTE PREÇO LINHA 12:", linhas[12]);
+  console.log("TESTE PREÇO LINHA 13:", linhas[13]);
+  console.log("TESTE PREÇO LINHA 14:", linhas[14]);
+  console.log("TESTE PREÇO LINHA 15:", linhas[15]);
+  console.log("TESTE PREÇO LINHA 16:", linhas[16]);
+
   const mapaPrecos = {};
 
   linhas.forEach(linha => {
@@ -1001,8 +1007,9 @@ async function importarXLSComPrecos(){
       const { error } = await supabaseClient
         .from("produtos")
         .upsert(lote, {
-          onConflict: "codigo"
-        });
+  onConflict: "codigo",
+  ignoreDuplicates: false
+});
 
       if(error){
         console.log(error);
