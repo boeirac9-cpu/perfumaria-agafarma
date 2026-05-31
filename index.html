@@ -152,12 +152,23 @@
     </div>
 
     <label>Forma de pagamento</label>
-    <select id="pagamento">
-      <option value="Pix">Pix</option>
-      <option value="Dinheiro">Dinheiro</option>
-      <option value="Cartão na entrega">Cartão na entrega</option>
-      <option value="Cartão na farmácia">Cartão na farmácia</option>
-    </select>
+
+<select id="pagamento" onchange="mostrarTroco()">
+  <option value="Pix">Pix</option>
+  <option value="Dinheiro">Dinheiro</option>
+  <option value="Cartão na entrega">Cartão na entrega</option>
+  <option value="Cartão na farmácia">Cartão na farmácia</option>
+</select>
+
+<div id="areaTroco" style="display:none;">
+  <label>Precisa de troco para quanto?</label>
+
+  <input
+    type="number"
+    id="trocoPara"
+    placeholder="Ex: 100,00"
+  >
+</div>
 
     <label>Observações</label>
     <textarea id="observacoes" placeholder="Alguma observação sobre o pedido?"></textarea>

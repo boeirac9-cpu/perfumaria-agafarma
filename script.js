@@ -677,6 +677,9 @@ async function enviarPedido(){
   const tipoEntrega = document.getElementById("tipoEntrega").value;
   const pagamento = document.getElementById("pagamento").value;
   const observacoes = document.getElementById("observacoes").value;
+  const trocoPara = document.getElementById("trocoPara")
+  ? document.getElementById("trocoPara").value
+  : "";
 
   if(nomeCliente.trim() === ""){
     alert("Digite seu nome.");
@@ -716,7 +719,11 @@ async function enviarPedido(){
     totalBruto += item.preco * item.quantidade;
   });
 
-  const totalFinal = calcularTotalComCupom(totalBruto);
+  let totalFinal = calcularTotalComCupom(totalBruto);
+
+if(tipoEntrega === "tele"){
+  totalFinal += 10;
+}
   const ehPix = pagamentoEhPix(pagamento);
 
   const { data, error } = await supabaseClient
@@ -726,7 +733,9 @@ async function enviarPedido(){
       telefone_login: clienteLogado.telefone,
       tipo_entrega: tipoEntrega === "tele" ? "Tele-entrega" : "Retirar na farmácia",
       pagamento,
-      observacoes,
+      observacoes: pagamento === "Dinheiro" && trocoPara
+  ? `${observacoes} | Troco para: R$ ${Number(trocoPara).toFixed(2).replace(".", ",")}`
+  : observacoes,
       produtos: carrinho,
       endereco: enderecoPedido,
       total: Number(totalFinal.toFixed(2)),
@@ -1127,4 +1136,17 @@ function abrirFecharCarrinhoMobile(){
   }
 
   carrinho.classList.toggle("ativo");
+}
+function mostrarTroco(){
+  const pagamento = document.getElementById("pagamento").value;
+  const areaTroco = document.getElementById("areaTroco");
+
+  if(!areaTroco){
+    return;
+  }
+
+  areaTroco.style.display =
+    pagamento === "Dinheiro"
+      ? "block"
+      : "none";
 }
