@@ -1043,4 +1043,74 @@ async function importarXLSComPrecos(){
     `;
   }
 }
+
+async function buscarSugestoesParaTodosSemImagem(){
+
+  const status = document.getElementById("statusBuscaTodasImagens");
+
+  status.innerHTML = "Carregando produtos sem imagem...";
+
+  const { data, error } = await supabaseClient
+    .from("produtos")
+    .select("*");
+
+  if(error){
+    console.log(error);
+    status.innerHTML = "Erro ao carregar produtos.";
+    return;
+  }
+
+  const semImagem = (data || []).filter(produto => {
+
+    return (
+      !produto.imagem ||
+      produto.imagem === "" ||
+      produto.imagem === "logo.png" ||
+      produto.imagem.includes("logo.png")
+    );
+
+  });
+
+  if(semImagem.length === 0){
+    status.innerHTML = "Todos os produtos já possuem imagem.";
+    return;
+  }
+
+  status.innerHTML = `
+    Buscando sugestões para ${semImagem.length} produtos...
+  `;
+
+  let processados = 0;
+
+  for(const produto of semImagem){
+
+    try{
+
+      await buscarSugestaoImagem(
+        produto.id,
+        produto.nome,
+        produto.codigo || ""
+      );
+
+      processados++;
+
+      status.innerHTML = `
+        Buscando sugestões...
+        ${processados}/${semImagem.length}
+      `;
+
+      await new Promise(resolve =>
+        setTimeout(resolve, 300)
+      );
+
+    }catch(erro){
+      console.log(erro);
+    }
+
+  }
+
+  status.innerHTML = `
+    Sugestões carregadas para ${processados} produtos.
+  `;
+}
 verificarAdmin();
