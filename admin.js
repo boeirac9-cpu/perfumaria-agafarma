@@ -1070,18 +1070,31 @@ async function importarXLSComPrecos(){
     console.log("Produtos extraídos do 0014:", produtosEstoque.slice(0, 10));
     console.log("Preços extraídos do 0003:", Object.entries(mapaPrecos).slice(0, 10));
 
-    const produtosParaSalvar = [];
-    let comPreco = 0;
-    let semPreco = 0;
+    const { data: produtosAtuais } = await supabaseClient
+  .from("produtos")
+  .select("codigo, imagem");
+
+const mapaImagensAtuais = {};
+
+(produtosAtuais || []).forEach(p => {
+  mapaImagensAtuais[p.codigo] = p.imagem;
+});
+
+const produtosParaSalvar = [];
+let comPreco = 0;
+let semPreco = 0;
 
     for(const produto of produtosEstoque){
       const precoEncontrado = mapaPrecos[produto.codigo] || 0;
+      const imagemAtual = mapaImagensAtuais[produto.codigo] || "logo.png";
 
       if(precoEncontrado > 0){
         comPreco++;
       } else {
         semPreco++;
       }
+
+      const imagemAtual = mapaImagensAtuais[produto.codigo] || "logo.png";
 
       produtosParaSalvar.push({
         codigo: produto.codigo,
@@ -1091,7 +1104,7 @@ async function importarXLSComPrecos(){
         quantidade: produto.quantidade,
         valor: precoEncontrado > 0 ? precoEncontrado : 0,
         desconto: 0,
-        imagem: "logo.png",
+        imagem: imagemAtual,
         descricao: "",
         categoria: produto.categoria || "higiene",
         promocao: false
