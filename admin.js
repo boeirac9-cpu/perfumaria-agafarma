@@ -1067,43 +1067,57 @@ async function importarXLSComPrecos(){
     const produtosEstoque = extrairProdutosEstoque0014(linhasEstoque);
     const mapaPrecos = extrairPrecos0003(linhasPrecos);
 
-    console.log("Produtos extraídos do 0014:", produtosEstoque.slice(0, 10));
-    console.log("Preços extraídos do 0003:", Object.entries(mapaPrecos).slice(0, 10));
+    function limparCodigoImportacao(codigo){
+      return String(codigo || "")
+        .trim()
+        .replace(".0", "")
+        .replace(/\s/g, "");
+    }
 
-    const { data: produtosAtuais } = await supabaseClient
-  .from("produtos")
-  .select("codigo, imagem");
+    const { data: produtosAtuais, error: erroProdutosAtuais } = await supabaseClient
+      .from("produtos")
+      .select("codigo, imagem");
 
-function limparCodigo(codigo){
-  return String(codigo || "")
-    .trim()
-    .replace(".0", "")
-    .replace(/\s/g, "");
-}
+    if(erroProdutosAtuais){
+      console.log(erroProdutosAtuais);
+      resultado.innerHTML = "<p>Erro ao buscar imagens atuais.</p>";
+      return;
+    }
 
-const mapaImagensAtuais = {};
+    const mapaImagensAtuais = {};
 
-(produtosAtuais || []).forEach(p => {
-  const codigoLimpo = limparCodigo(p.codigo);
+    (produtosAtuais || []).forEach(p => {
+      const codigoLimpo = limparCodigoImportacao(p.codigo);
 
-  if(codigoLimpo && p.imagem && p.imagem !== "logo.png"){
-    mapaImagensAtuais[codigoLimpo] = p.imagem;
-  }
-});
+      if(
+        codigoLimpo &&
+        p.imagem &&
+        p.imagem !== "" &&
+        p.imagem !== "logo.png" &&
+        !String(p.imagem).includes("logo.png")
+      ){
+        mapaImagensAtuais[codigoLimpo] = p.imagem;
+      }
+    });
 
-const produtosParaSalvar = [];
-let comPreco = 0;
-let semPreco = 0;
+    const produtosParaSalvar = [];
+    let comPreco = 0;
+    let semPreco = 0;
+    let imagensMantidas = 0;
 
     for(const produto of produtosEstoque){
       const precoEncontrado = mapaPrecos[produto.codigo] || 0;
-      const codigoLimpo = limparCodigo(produto.codigo);
-const imagemAtual = mapaImagensAtuais[codigoLimpo] || "logo.png";
+      const codigoLimpo = limparCodigoImportacao(produto.codigo);
+      const imagemAtual = mapaImagensAtuais[codigoLimpo] || "logo.png";
 
       if(precoEncontrado > 0){
         comPreco++;
       } else {
         semPreco++;
+      }
+
+      if(imagemAtual !== "logo.png"){
+        imagensMantidas++;
       }
 
       produtosParaSalvar.push({
@@ -1132,9 +1146,9 @@ const imagemAtual = mapaImagensAtuais[codigoLimpo] || "logo.png";
       const { error } = await supabaseClient
         .from("produtos")
         .upsert(lote, {
-  onConflict: "codigo",
-  ignoreDuplicates: false
-});
+          onConflict: "codigo",
+          ignoreDuplicates: false
+        });
 
       if(error){
         console.log(error);
@@ -1154,6 +1168,7 @@ const imagemAtual = mapaImagensAtuais[codigoLimpo] || "logo.png";
       <p>Produtos do 0014: ${produtosEstoque.length}</p>
       <p>Com preço encontrado no 0003: ${comPreco}</p>
       <p>Sem preço: ${semPreco}</p>
+      <p>Imagens mantidas: ${imagensMantidas}</p>
       <p>Produtos salvos/atualizados: ${salvos}</p>
     `;
 
