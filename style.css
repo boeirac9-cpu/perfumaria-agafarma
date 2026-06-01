@@ -849,3 +849,71 @@ header{
 .dot.ativo{
   background:#ffd400;
 }
+
+/* BENEFÍCIOS */
+
+.beneficios{
+  max-width:1300px;
+  margin:25px auto 35px;
+  padding:0 25px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+}
+
+.beneficio-card{
+  background:white;
+  border-radius:25px;
+  padding:25px;
+  text-align:center;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  transition:0.3s;
+  border-top:5px solid #ffd400;
+  cursor:pointer;
+}
+
+.beneficio-card:hover{
+  transform:translateY(-8px);
+}
+
+.icone-beneficio{
+  font-size:45px;
+  margin-bottom:12px;
+}
+
+.beneficio-card h3{
+  color:#0057b8;
+  margin-bottom:8px;
+  font-size:22px;
+}
+
+.beneficio-card p{
+  color:#666;
+  font-size:14px;
+  line-height:1.5;
+}
+
+@media(max-width:768px){
+  .beneficios{
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    padding:0 10px;
+  }
+
+  .beneficio-card{
+    padding:15px;
+    border-radius:18px;
+  }
+
+  .icone-beneficio{
+    font-size:30px;
+  }
+
+  .beneficio-card h3{
+    font-size:15px;
+  }
+
+  .beneficio-card p{
+    font-size:11px;
+  }
+}
