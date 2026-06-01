@@ -1225,12 +1225,13 @@ async function buscarSugestoesParaTodosSemImagem(){
 
   const lote = semImagem.slice(0, 50);
 
-  status.innerHTML = `
-    Buscando sugestões para ${lote.length} produtos...<br>
-    Restam sem imagem: ${semImagem.length}
-  `;
+let processados = 0;
+const totalSemImagem = semImagem.length;
 
-  let processados = 0;
+status.innerHTML = `
+  Buscando sugestões... ${processados}/${lote.length}<br>
+  Restam sem imagem: ${Math.max(0, totalSemImagem - processados)}
+`;
 
   for(const produto of lote){
     try{
@@ -1244,7 +1245,7 @@ async function buscarSugestoesParaTodosSemImagem(){
 
       status.innerHTML = `
         Buscando sugestões... ${processados}/${lote.length}<br>
-        Restam sem imagem: ${semImagem.length}
+        Restam sem imagem: ${Math.max(0, semImagem.length - processados)}
       `;
 
       await new Promise(resolve => setTimeout(resolve, 300));
