@@ -1163,3 +1163,27 @@ function mostrarTaxaEntrega(){
       ? "block"
       : "none";
 }
+
+// BANNER ROTATIVO
+let slideAtual = 0;
+
+function trocarBanner(){
+  const slides = document.querySelectorAll(".slide");
+  const dots = document.querySelectorAll(".dot");
+
+  if(slides.length === 0) return;
+
+  slides[slideAtual].classList.remove("ativo");
+  dots[slideAtual].classList.remove("ativo");
+
+  slideAtual++;
+
+  if(slideAtual >= slides.length){
+    slideAtual = 0;
+  }
+
+  slides[slideAtual].classList.add("ativo");
+  dots[slideAtual].classList.add("ativo");
+}
+
+setInterval(trocarBanner, 4000);
