@@ -13,23 +13,23 @@ body{
 /* HEADER */
 
 header{
-  background:white;
-  padding:20px 35px;
+  background:#ffd400;
+  padding:18px 35px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  box-shadow:0 3px 15px rgba(0,0,0,0.08);
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
   position:sticky;
   top:0;
   z-index:1000;
-  border-bottom:4px solid #ffd400;
 }
 
 .logo{
-  font-size:24px;
+  font-size:32px;
   font-weight:900;
   color:#0057b8;
   text-align:center;
+  letter-spacing:1px;
 }
 
 .menu-btn,

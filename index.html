@@ -12,7 +12,17 @@
 <header>
   <button class="menu-btn" onclick="abrirMenu()">☰</button>
 
-  <div class="logo">AGAFARMA LAGOA VERMELHA</div>
+  <div class="logo">
+  Agafarma
+  <span style="
+    display:block;
+    font-size:15px;
+    font-weight:700;
+    margin-top:2px;
+  ">
+    Lagoa Vermelha
+  </span>
+</div>
 
   <button class="carrinho-btn" onclick="abrirLogin()">
     Entrar / Cadastrar
@@ -50,8 +60,28 @@
 </aside>
 
 <section class="hero">
-  <h1>Perfumaria Agafarma</h1>
-  <p>Beleza, cuidado e bem-estar com um toque premium.</p>
+
+  <div class="banner-slider">
+
+    <div class="slide ativo">
+      <img src="banner1.jpg" alt="Banner 1">
+    </div>
+
+    <div class="slide">
+      <img src="banner2.jpg" alt="Banner 2">
+    </div>
+
+    <div class="slide">
+      <img src="banner3.jpg" alt="Banner 3">
+    </div>
+
+    <div class="indicadores">
+      <span class="dot ativo"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+
+  </div>
 
   <div class="pesquisa">
     <input
@@ -61,6 +91,7 @@
       onkeyup="pesquisarProduto()"
     >
   </div>
+
 </section>
 
 <section class="faixa-info">
