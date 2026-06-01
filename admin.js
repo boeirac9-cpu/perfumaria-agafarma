@@ -1147,14 +1147,14 @@ async function importarXLSComPrecos(){
 }
 
 async function buscarSugestoesParaTodosSemImagem(){
-
   const status = document.getElementById("statusBuscaTodasImagens");
 
   status.innerHTML = "Carregando produtos sem imagem...";
 
   const { data, error } = await supabaseClient
     .from("produtos")
-    .select("*");
+    .select("*")
+    .order("id", { ascending:false });
 
   if(error){
     console.log(error);
@@ -1163,14 +1163,12 @@ async function buscarSugestoesParaTodosSemImagem(){
   }
 
   const semImagem = (data || []).filter(produto => {
-
     return (
       !produto.imagem ||
       produto.imagem === "" ||
       produto.imagem === "logo.png" ||
       produto.imagem.includes("logo.png")
     );
-
   });
 
   if(semImagem.length === 0){
@@ -1178,16 +1176,17 @@ async function buscarSugestoesParaTodosSemImagem(){
     return;
   }
 
+  const lote = semImagem.slice(0, 50);
+
   status.innerHTML = `
-    Buscando sugestões para ${semImagem.length} produtos...
+    Buscando sugestões para ${lote.length} produtos...<br>
+    Restam sem imagem: ${semImagem.length}
   `;
 
   let processados = 0;
 
-  for(const produto of semImagem){
-
+  for(const produto of lote){
     try{
-
       await buscarSugestaoImagem(
         produto.id,
         produto.nome,
@@ -1197,23 +1196,94 @@ async function buscarSugestoesParaTodosSemImagem(){
       processados++;
 
       status.innerHTML = `
-        Buscando sugestões...
-        ${processados}/${semImagem.length}
+        Buscando sugestões... ${processados}/${lote.length}<br>
+        Restam sem imagem: ${semImagem.length}
       `;
 
-      await new Promise(resolve =>
-        setTimeout(resolve, 300)
-      );
+      await new Promise(resolve => setTimeout(resolve, 300));
 
     }catch(erro){
       console.log(erro);
     }
-
   }
 
   status.innerHTML = `
-    Sugestões carregadas para ${processados} produtos.
+    Concluído! Foram carregadas sugestões para ${processados} produtos.<br>
+    Confira as imagens e clique em <strong>Aprovar todas as imagens carregadas</strong>.
   `;
+}
+
+async function aprovarTodasImagensLote(){
+  const status = document.getElementById("statusBuscaTodasImagens");
+
+  const ids = Object.keys(sugestoesImagem);
+
+  if(ids.length === 0){
+    alert("Nenhuma sugestão carregada ainda.");
+    return;
+  }
+
+  if(!confirm(`Aprovar e salvar ${ids.length} imagens carregadas?`)){
+    return;
+  }
+
+  let salvas = 0;
+  let erros = 0;
+
+  status.innerHTML = `Salvando imagens... 0/${ids.length}`;
+
+  for(const id of ids){
+    try{
+      const grupo = sugestoesImagem[id];
+
+      if(!grupo || !grupo.imagens || grupo.imagens.length === 0){
+        erros++;
+        continue;
+      }
+
+      const imagem = grupo.imagens[grupo.indice || 0];
+
+      const urlImagem =
+        imagem.original ||
+        imagem.thumbnail;
+
+      if(!urlImagem){
+        erros++;
+        continue;
+      }
+
+      const { error } = await supabaseClient
+        .from("produtos")
+        .update({ imagem: urlImagem })
+        .eq("id", Number(id));
+
+      if(error){
+        console.log(error);
+        erros++;
+      } else {
+        salvas++;
+      }
+
+      status.innerHTML = `Salvando imagens... ${salvas}/${ids.length}`;
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+    }catch(erro){
+      console.log(erro);
+      erros++;
+    }
+  }
+
+  sugestoesImagem = {};
+
+  status.innerHTML = `
+    Imagens salvas: ${salvas}<br>
+    Erros: ${erros}<br><br>
+    Clique em <strong>Buscar sugestões para todos sem imagem</strong> para carregar mais 50.
+  `;
+
+  carregarProdutosSemImagem();
+  carregarProdutosAdmin();
 }
 let ultimoPedidoImpressoId = Number(localStorage.getItem("ultimoPedidoImpressoId")) || 0;
 
