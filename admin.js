@@ -1074,10 +1074,21 @@ async function importarXLSComPrecos(){
   .from("produtos")
   .select("codigo, imagem");
 
+function limparCodigo(codigo){
+  return String(codigo || "")
+    .trim()
+    .replace(".0", "")
+    .replace(/\s/g, "");
+}
+
 const mapaImagensAtuais = {};
 
 (produtosAtuais || []).forEach(p => {
-  mapaImagensAtuais[p.codigo] = p.imagem;
+  const codigoLimpo = limparCodigo(p.codigo);
+
+  if(codigoLimpo && p.imagem && p.imagem !== "logo.png"){
+    mapaImagensAtuais[codigoLimpo] = p.imagem;
+  }
 });
 
 const produtosParaSalvar = [];
@@ -1086,7 +1097,8 @@ let semPreco = 0;
 
     for(const produto of produtosEstoque){
       const precoEncontrado = mapaPrecos[produto.codigo] || 0;
-      const imagemAtual = mapaImagensAtuais[produto.codigo] || "logo.png";
+      const codigoLimpo = limparCodigo(produto.codigo);
+const imagemAtual = mapaImagensAtuais[codigoLimpo] || "logo.png";
 
       if(precoEncontrado > 0){
         comPreco++;
