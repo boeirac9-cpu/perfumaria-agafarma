@@ -1164,26 +1164,75 @@ function mostrarTaxaEntrega(){
       : "none";
 }
 
-// BANNER ROTATIVO
-let slideAtual = 0;
+/* BANNERS DINÂMICOS */
 
-function trocarBanner(){
-  const slides = document.querySelectorAll(".slide");
-  const dots = document.querySelectorAll(".dot");
+let bannerAtual = 0;
 
-  if(slides.length === 0) return;
+async function carregarBannersSite(){
 
-  slides[slideAtual].classList.remove("ativo");
-  dots[slideAtual].classList.remove("ativo");
+  const area = document.getElementById("bannersDinamicos");
 
-  slideAtual++;
-
-  if(slideAtual >= slides.length){
-    slideAtual = 0;
+  if(!area){
+    return;
   }
 
-  slides[slideAtual].classList.add("ativo");
-  dots[slideAtual].classList.add("ativo");
+  const { data, error } = await supabaseClient
+    .from("banners")
+    .select("*")
+    .eq("ativo", true)
+    .order("ordem", { ascending:true });
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+  if(!data || data.length === 0){
+    return;
+  }
+
+  area.innerHTML = "";
+
+  data.forEach((banner, index) => {
+
+    const div = document.createElement("div");
+
+    div.className =
+      index === 0
+      ? "slide ativo"
+      : "slide";
+
+    div.innerHTML = `
+      <img src="${banner.imagem}" alt="${banner.titulo || 'Banner'}">
+    `;
+
+    area.appendChild(div);
+  });
+
+  iniciarRotacaoBanner();
 }
 
-setInterval(trocarBanner, 4000);
+function iniciarRotacaoBanner(){
+
+  setInterval(() => {
+
+    const slides = document.querySelectorAll(".slide");
+
+    if(slides.length <= 1){
+      return;
+    }
+
+    slides[bannerAtual].classList.remove("ativo");
+
+    bannerAtual++;
+
+    if(bannerAtual >= slides.length){
+      bannerAtual = 0;
+    }
+
+    slides[bannerAtual].classList.add("ativo");
+
+  }, 4000);
+}
+
+carregarBannersSite();

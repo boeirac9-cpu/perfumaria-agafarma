@@ -79,8 +79,14 @@ async function sairAdmin(){
 
 function mostrarAba(aba){
   document.getElementById("abaPedidos").classList.add("escondido");
-  document.getElementById("abaProdutos").classList.add("escondido");
-  document.getElementById("abaCupons").classList.add("escondido");
+document.getElementById("abaProdutos").classList.add("escondido");
+document.getElementById("abaCupons").classList.add("escondido");
+
+const abaBanners = document.getElementById("abaBanners");
+
+if(abaBanners){
+  abaBanners.classList.add("escondido");
+}
 
   const abaXls = document.getElementById("abaXls");
   const abaImagens = document.getElementById("abaImagens");
@@ -111,6 +117,11 @@ function mostrarAba(aba){
     document.getElementById("abaCupons").classList.remove("escondido");
     carregarCuponsAdmin();
   }
+
+  if(aba === "banners" && abaBanners){
+  abaBanners.classList.remove("escondido");
+  carregarBannersAdmin();
+}
 
   if(aba === "imagens" && abaImagens){
     abaImagens.classList.remove("escondido");
@@ -1459,4 +1470,150 @@ ${pedido.observacoes || "Nenhuma"}
 
   janela.document.close();
 }
+
+/* BANNERS / FOLDERS */
+
+async function salvarBanner(){
+  const titulo = document.getElementById("bannerTitulo").value.trim();
+  const ordem = Number(document.getElementById("bannerOrdem").value) || 0;
+  const arquivo = document.getElementById("bannerImagem").files[0];
+
+  if(!arquivo){
+    alert("Selecione uma imagem para o banner.");
+    return;
+  }
+
+  const nomeArquivo = `banner-${Date.now()}-${arquivo.name}`;
+
+  const { error: erroUpload } = await supabaseClient.storage
+    .from("banners")
+    .upload(nomeArquivo, arquivo);
+
+  if(erroUpload){
+    console.log(erroUpload);
+    alert("Erro ao enviar imagem.");
+    return;
+  }
+
+  const { data: urlData } = supabaseClient.storage
+    .from("banners")
+    .getPublicUrl(nomeArquivo);
+
+  const imagemUrl = urlData.publicUrl;
+
+  const { error } = await supabaseClient
+    .from("banners")
+    .insert([{
+      titulo,
+      imagem: imagemUrl,
+      ativo: true,
+      ordem
+    }]);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao salvar banner.");
+    return;
+  }
+
+  alert("Banner salvo com sucesso!");
+
+  document.getElementById("bannerTitulo").value = "";
+  document.getElementById("bannerOrdem").value = "0";
+  document.getElementById("bannerImagem").value = "";
+
+  carregarBannersAdmin();
+}
+
+async function carregarBannersAdmin(){
+  const lista = document.getElementById("listaBannersAdmin");
+
+  if(!lista){
+    return;
+  }
+
+  lista.innerHTML = "<p class='sem-pedidos'>Carregando banners...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("banners")
+    .select("*")
+    .order("ordem", { ascending:true })
+    .order("id", { ascending:false });
+
+  if(error){
+    console.log(error);
+    lista.innerHTML = "<p class='sem-pedidos'>Erro ao carregar banners.</p>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = "<p class='sem-pedidos'>Nenhum banner cadastrado.</p>";
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  data.forEach(banner => {
+    const div = document.createElement("div");
+    div.classList.add("produto-admin");
+
+    div.innerHTML = `
+      <img src="${banner.imagem}" style="width:180px;height:90px;object-fit:cover;">
+
+      <div class="produto-admin-info">
+        <h3>${banner.titulo || "Banner sem título"}</h3>
+        <p><strong>Ordem:</strong> ${banner.ordem || 0}</p>
+        <p><strong>Status:</strong> ${banner.ativo ? "Ativo" : "Inativo"}</p>
+
+        <div class="botoes-produto-admin">
+          <button onclick="alternarBanner(${banner.id}, ${banner.ativo})">
+            ${banner.ativo ? "Desativar" : "Ativar"}
+          </button>
+
+          <button class="excluir-produto" onclick="excluirBanner(${banner.id})">
+            Excluir
+          </button>
+        </div>
+      </div>
+    `;
+
+    lista.appendChild(div);
+  });
+}
+
+async function alternarBanner(id, ativoAtual){
+  const { error } = await supabaseClient
+    .from("banners")
+    .update({ ativo: !ativoAtual })
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao alterar banner.");
+    return;
+  }
+
+  carregarBannersAdmin();
+}
+
+async function excluirBanner(id){
+  if(!confirm("Deseja excluir este banner?")){
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("banners")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao excluir banner.");
+    return;
+  }
+
+  alert("Banner excluído!");
+  carregarBannersAdmin();
+}
+
 verificarAdmin();
