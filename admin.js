@@ -1094,8 +1094,6 @@ let semPreco = 0;
         semPreco++;
       }
 
-      const imagemAtual = mapaImagensAtuais[produto.codigo] || "logo.png";
-
       produtosParaSalvar.push({
         codigo: produto.codigo,
         nome: produto.nome,
