@@ -24,12 +24,49 @@ header{
   z-index:1000;
 }
 
+.logo-area{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logo-coracao{
+  width:55px;
+  height:55px;
+  object-fit:contain;
+}
+
+.logo-area{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logo-coracao{
+  width:55px;
+  height:55px;
+  object-fit:contain;
+}
+
 .logo{
-  font-size:32px;
+  font-size:42px;
   font-weight:900;
   color:#0057b8;
-  text-align:center;
-  letter-spacing:1px;
+  line-height:1;
+}
+
+.cidade-logo{
+  color:#0057b8;
+  font-size:15px;
+  font-weight:700;
+  margin-top:4px;
+}
+
+.cidade-logo{
+  color:#0057b8;
+  font-size:15px;
+  font-weight:700;
+  margin-top:4px;
 }
 
 .menu-btn,
