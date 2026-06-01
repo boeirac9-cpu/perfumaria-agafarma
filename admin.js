@@ -522,23 +522,48 @@ async function carregarProdutosSemImagem(){
 
   lista.innerHTML = "<p class='sem-pedidos'>Carregando produtos sem imagem...</p>";
 
-  const { data, error } = await supabaseClient
-    .from("produtos")
-    .select("*")
-    .order("id", { ascending:false });
+  let todosProdutos = [];
+  let pagina = 0;
+  const tamanhoPagina = 1000;
 
-  if(error){
-    console.log(error);
-    lista.innerHTML = "<p class='sem-pedidos'>Erro ao carregar produtos.</p>";
-    return;
+  while(true){
+    const inicio = pagina * tamanhoPagina;
+    const fim = inicio + tamanhoPagina - 1;
+
+    const { data, error } = await supabaseClient
+      .from("produtos")
+      .select("*")
+      .order("id", { ascending:false })
+      .range(inicio, fim);
+
+    if(error){
+      console.log(error);
+      lista.innerHTML = "<p class='sem-pedidos'>Erro ao carregar produtos.</p>";
+      return;
+    }
+
+    if(!data || data.length === 0){
+      break;
+    }
+
+    todosProdutos = todosProdutos.concat(data);
+
+    if(data.length < tamanhoPagina){
+      break;
+    }
+
+    pagina++;
   }
 
-  const semImagem = (data || []).filter(produto => {
+  const semImagem = todosProdutos.filter(produto => {
+    const img = String(produto.imagem || "").trim();
+
     return (
-      !produto.imagem ||
-      produto.imagem === "" ||
-      produto.imagem === "logo.png" ||
-      produto.imagem.includes("logo.png")
+      img === "" ||
+      img === "logo.png" ||
+      img.includes("logo.png") ||
+      img.includes("undefined") ||
+      img.includes("null")
     );
   });
 
@@ -547,7 +572,11 @@ async function carregarProdutosSemImagem(){
     return;
   }
 
-  lista.innerHTML = "";
+  lista.innerHTML = `
+    <p class='sem-pedidos'>
+      Produtos sem imagem encontrados: <strong>${semImagem.length}</strong>
+    </p>
+  `;
 
   semImagem.forEach(produto => {
     const div = document.createElement("div");
@@ -1067,48 +1096,15 @@ async function importarXLSComPrecos(){
     const produtosEstoque = extrairProdutosEstoque0014(linhasEstoque);
     const mapaPrecos = extrairPrecos0003(linhasPrecos);
 
-    function limparCodigoImportacao(codigo){
-      return String(codigo || "")
-        .trim()
-        .replace(".0", "")
-        .replace(/\s/g, "");
-    }
-
-    const { data: produtosAtuais, error: erroProdutosAtuais } = await supabaseClient
-      .from("produtos")
-      .select("codigo, imagem");
-
-    if(erroProdutosAtuais){
-      console.log(erroProdutosAtuais);
-      resultado.innerHTML = "<p>Erro ao buscar imagens atuais.</p>";
-      return;
-    }
-
-    const mapaImagensAtuais = {};
-
-    (produtosAtuais || []).forEach(p => {
-      const codigoLimpo = limparCodigoImportacao(p.codigo);
-
-      if(
-        codigoLimpo &&
-        p.imagem &&
-        p.imagem !== "" &&
-        p.imagem !== "logo.png" &&
-        !String(p.imagem).includes("logo.png")
-      ){
-        mapaImagensAtuais[codigoLimpo] = p.imagem;
-      }
-    });
-
-    const produtosParaSalvar = [];
     let comPreco = 0;
     let semPreco = 0;
-    let imagensMantidas = 0;
+    let atualizados = 0;
+    let inseridos = 0;
+
+    resultado.innerHTML = `<p>Atualizando ${produtosEstoque.length} produtos...</p>`;
 
     for(const produto of produtosEstoque){
       const precoEncontrado = mapaPrecos[produto.codigo] || 0;
-      const codigoLimpo = limparCodigoImportacao(produto.codigo);
-      const imagemAtual = mapaImagensAtuais[codigoLimpo] || "logo.png";
 
       if(precoEncontrado > 0){
         comPreco++;
@@ -1116,51 +1112,64 @@ async function importarXLSComPrecos(){
         semPreco++;
       }
 
-      if(imagemAtual !== "logo.png"){
-        imagensMantidas++;
-      }
-
-      produtosParaSalvar.push({
-        codigo: produto.codigo,
+      const dadosAtualizacao = {
         nome: produto.nome,
         laboratorio: produto.laboratorio,
         marca: produto.marca,
         quantidade: produto.quantidade,
         valor: precoEncontrado > 0 ? precoEncontrado : 0,
         desconto: 0,
-        imagem: imagemAtual,
         descricao: "",
         categoria: produto.categoria || "higiene",
         promocao: false
-      });
-    }
+      };
 
-    resultado.innerHTML = `<p>Salvando ${produtosParaSalvar.length} produtos...</p>`;
-
-    const tamanhoLote = 300;
-    let salvos = 0;
-
-    for(let i = 0; i < produtosParaSalvar.length; i += tamanhoLote){
-      const lote = produtosParaSalvar.slice(i, i + tamanhoLote);
-
-      const { error } = await supabaseClient
+      const { data: produtoExiste, error: erroBusca } = await supabaseClient
         .from("produtos")
-        .upsert(lote, {
-          onConflict: "codigo",
-          ignoreDuplicates: false
-        });
+        .select("id")
+        .eq("codigo", produto.codigo)
+        .maybeSingle();
 
-      if(error){
-        console.log(error);
-        resultado.innerHTML = `
-          <p><strong>Erro ao salvar lote.</strong></p>
-          <p>${error.message}</p>
-        `;
-        return;
+      if(erroBusca){
+        console.log(erroBusca);
+        continue;
       }
 
-      salvos += lote.length;
-      resultado.innerHTML = `<p>Salvando produtos... ${salvos}/${produtosParaSalvar.length}</p>`;
+      if(produtoExiste){
+        const { error } = await supabaseClient
+          .from("produtos")
+          .update(dadosAtualizacao)
+          .eq("codigo", produto.codigo);
+
+        if(!error){
+          atualizados++;
+        } else {
+          console.log(error);
+        }
+
+      } else {
+        const { error } = await supabaseClient
+          .from("produtos")
+          .insert([{
+            codigo: produto.codigo,
+            ...dadosAtualizacao,
+            imagem: "logo.png"
+          }]);
+
+        if(!error){
+          inseridos++;
+        } else {
+          console.log(error);
+        }
+      }
+
+      resultado.innerHTML = `
+        <p>Processando produtos...</p>
+        <p>Atualizados: ${atualizados}</p>
+        <p>Inseridos novos: ${inseridos}</p>
+      `;
+
+      await new Promise(resolve => setTimeout(resolve, 20));
     }
 
     resultado.innerHTML = `
@@ -1168,8 +1177,8 @@ async function importarXLSComPrecos(){
       <p>Produtos do 0014: ${produtosEstoque.length}</p>
       <p>Com preço encontrado no 0003: ${comPreco}</p>
       <p>Sem preço: ${semPreco}</p>
-      <p>Imagens mantidas: ${imagensMantidas}</p>
-      <p>Produtos salvos/atualizados: ${salvos}</p>
+      <p>Produtos atualizados sem alterar imagem: ${atualizados}</p>
+      <p>Produtos novos inseridos com logo: ${inseridos}</p>
     `;
 
     carregarProdutosAdmin();
