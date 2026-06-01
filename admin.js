@@ -1198,16 +1198,38 @@ async function buscarSugestoesParaTodosSemImagem(){
 
   status.innerHTML = "Carregando produtos sem imagem...";
 
-  const { data, error } = await supabaseClient
+  let data = [];
+let pagina = 0;
+const tamanhoPagina = 1000;
+
+while(true){
+  const inicio = pagina * tamanhoPagina;
+  const fim = inicio + tamanhoPagina - 1;
+
+  const { data: loteProdutos, error } = await supabaseClient
     .from("produtos")
     .select("*")
-    .order("id", { ascending:false });
+    .order("id", { ascending:false })
+    .range(inicio, fim);
 
   if(error){
     console.log(error);
     status.innerHTML = "Erro ao carregar produtos.";
     return;
   }
+
+  if(!loteProdutos || loteProdutos.length === 0){
+    break;
+  }
+
+  data = data.concat(loteProdutos);
+
+  if(loteProdutos.length < tamanhoPagina){
+    break;
+  }
+
+  pagina++;
+}
 
   const semImagem = (data || []).filter(produto => {
     return (
