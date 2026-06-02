@@ -1256,7 +1256,7 @@ while(true){
     return;
   }
 
-  const lote = semImagem.slice(0, 50);
+  const lote = semImagem.slice(0, 100);
 
 let processados = 0;
 const totalSemImagem = semImagem.length;
