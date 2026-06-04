@@ -348,14 +348,24 @@ function filtrarPromocoes(){
   fecharMenu();
 }
 
+function removerAcentos(texto){
+  return String(texto || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function pesquisarProduto(){
-  const valorPesquisa = document.getElementById("campoPesquisa").value.toLowerCase();
+  const valorPesquisa = removerAcentos(
+    document.getElementById("campoPesquisa").value
+  );
 
   document.querySelectorAll(".card").forEach(card => {
-    const nomeProduto = card.dataset.nome.toLowerCase();
+    const textoProduto = removerAcentos(card.innerText);
 
     card.style.display =
-      nomeProduto.includes(valorPesquisa)
+      textoProduto.includes(valorPesquisa)
       ? "block"
       : "none";
   });
