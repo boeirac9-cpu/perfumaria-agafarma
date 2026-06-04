@@ -1152,3 +1152,56 @@ header{
     overflow-y:auto;
   }
 }
+
+.barra-contato{
+  background:#0057b8;
+  color:white;
+  margin:25px auto;
+  padding:25px;
+  border-radius:20px;
+  max-width:1100px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.barra-contato h2{
+  margin:0;
+  font-size:26px;
+}
+
+.barra-contato p{
+  margin:6px 0 0;
+}
+
+.botoes-contato{
+  display:flex;
+  gap:12px;
+}
+
+.botoes-contato a{
+  background:white;
+  color:#0057b8;
+  padding:12px 18px;
+  border-radius:12px;
+  text-decoration:none;
+  font-weight:800;
+}
+
+@media(max-width:768px){
+  .barra-contato{
+    margin:20px 10px;
+    flex-direction:column;
+    text-align:center;
+  }
+
+  .botoes-contato{
+    flex-direction:column;
+    width:100%;
+  }
+
+  .botoes-contato a{
+    width:100%;
+  }
+}
