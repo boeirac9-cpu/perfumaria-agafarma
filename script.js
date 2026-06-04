@@ -1,6 +1,8 @@
 let carrinho = [];
 let clienteLogado = JSON.parse(localStorage.getItem("clienteLogadoAgafarma")) || null;
 let produtos = [];
+let paginaAtual = 1;
+const produtosPorPagina = 350;
 let cupomAtual = null;
 
 const listaProdutos = document.getElementById("listaProdutos");
@@ -33,10 +35,14 @@ function calcularPrecoFinal(produto){
 async function carregarProdutos(){
   listaProdutos.innerHTML = "<p class='sem-pedidos'>Carregando produtos...</p>";
 
-  const { data, error } = await supabaseClient
-    .from("produtos")
-    .select("*")
-    .order("id", { ascending: false });
+  const inicio = (paginaAtual - 1) * produtosPorPagina;
+const fim = inicio + produtosPorPagina - 1;
+
+const { data, error } = await supabaseClient
+  .from("produtos")
+  .select("*")
+  .order("id", { ascending: false })
+  .range(inicio, fim);
 
   if(error){
     console.log(error);
@@ -1236,3 +1242,19 @@ function iniciarRotacaoBanner(){
 }
 
 carregarBannersSite();
+
+function proximaPagina(){
+  paginaAtual++;
+  document.getElementById("numeroPagina").innerHTML = `Página ${paginaAtual}`;
+  carregarProdutos();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function voltarPagina(){
+  if(paginaAtual > 1){
+    paginaAtual--;
+    document.getElementById("numeroPagina").innerHTML = `Página ${paginaAtual}`;
+    carregarProdutos();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
