@@ -36,8 +36,14 @@ function calcularPrecoFinal(produto){
 async function carregarProdutos(){
   listaProdutos.innerHTML = "<p class='sem-pedidos'>Carregando produtos...</p>";
 
-  const inicio = (paginaAtual - 1) * produtosPorPagina;
-const fim = inicio + produtosPorPagina - 1;
+  const quantidadeAtual = paginaAtual === 1 ? 20 : 350;
+
+const inicio =
+  paginaAtual === 1
+    ? 0
+    : 20 + ((paginaAtual - 2) * 350);
+
+const fim = inicio + quantidadeAtual - 1;
 
 let consulta = supabaseClient
   .from("produtos")
