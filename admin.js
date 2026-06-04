@@ -79,25 +79,18 @@ async function sairAdmin(){
 
 function mostrarAba(aba){
   document.getElementById("abaPedidos").classList.add("escondido");
-document.getElementById("abaProdutos").classList.add("escondido");
-document.getElementById("abaCupons").classList.add("escondido");
+  document.getElementById("abaProdutos").classList.add("escondido");
+  document.getElementById("abaCupons").classList.add("escondido");
 
-const abaBanners = document.getElementById("abaBanners");
-
-if(abaBanners){
-  abaBanners.classList.add("escondido");
-}
-
+  const abaBanners = document.getElementById("abaBanners");
+  const abaVideos = document.getElementById("abaVideos");
   const abaXls = document.getElementById("abaXls");
   const abaImagens = document.getElementById("abaImagens");
 
-  if(abaXls){
-    abaXls.classList.add("escondido");
-  }
-
-  if(abaImagens){
-    abaImagens.classList.add("escondido");
-  }
+  if(abaBanners) abaBanners.classList.add("escondido");
+  if(abaVideos) abaVideos.classList.add("escondido");
+  if(abaXls) abaXls.classList.add("escondido");
+  if(abaImagens) abaImagens.classList.add("escondido");
 
   if(aba === "pedidos"){
     document.getElementById("abaPedidos").classList.remove("escondido");
@@ -119,9 +112,14 @@ if(abaBanners){
   }
 
   if(aba === "banners" && abaBanners){
-  abaBanners.classList.remove("escondido");
-  carregarBannersAdmin();
-}
+    abaBanners.classList.remove("escondido");
+    carregarBannersAdmin();
+  }
+
+  if(aba === "videos" && abaVideos){
+    abaVideos.classList.remove("escondido");
+    carregarVideosAdmin();
+  }
 
   if(aba === "imagens" && abaImagens){
     abaImagens.classList.remove("escondido");
@@ -1614,6 +1612,155 @@ async function excluirBanner(id){
 
   alert("Banner excluído!");
   carregarBannersAdmin();
+}
+
+/* VÍDEOS HOME */
+
+async function salvarVideoHome(){
+  const titulo = document.getElementById("videoTitulo").value.trim();
+  const ordem = Number(document.getElementById("videoOrdem").value) || 1;
+  const arquivo = document.getElementById("videoArquivo").files[0];
+
+  if(!arquivo){
+    alert("Selecione um vídeo.");
+    return;
+  }
+
+  const nomeArquivo = `video-${Date.now()}-${arquivo.name}`;
+
+  const { error: erroUpload } = await supabaseClient.storage
+    .from("videos")
+    .upload(nomeArquivo, arquivo);
+
+  if(erroUpload){
+    console.log(erroUpload);
+    alert("Erro ao enviar vídeo.");
+    return;
+  }
+
+  const { data: urlData } = supabaseClient.storage
+    .from("videos")
+    .getPublicUrl(nomeArquivo);
+
+  const videoUrl = urlData.publicUrl;
+
+  const { error } = await supabaseClient
+    .from("videos_home")
+    .insert([{
+      titulo,
+      video_url: videoUrl,
+      ativo: true,
+      ordem
+    }]);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao salvar vídeo.");
+    return;
+  }
+
+  alert("Vídeo salvo com sucesso!");
+
+  document.getElementById("videoTitulo").value = "";
+  document.getElementById("videoOrdem").value = "1";
+  document.getElementById("videoArquivo").value = "";
+
+  carregarVideosAdmin();
+}
+
+async function carregarVideosAdmin(){
+  const lista = document.getElementById("listaVideosAdmin");
+
+  if(!lista){
+    return;
+  }
+
+  lista.innerHTML = "<p class='sem-pedidos'>Carregando vídeos...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("videos_home")
+    .select("*")
+    .order("ordem", { ascending:true })
+    .order("id", { ascending:false });
+
+  if(error){
+    console.log(error);
+    lista.innerHTML = "<p class='sem-pedidos'>Erro ao carregar vídeos.</p>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = "<p class='sem-pedidos'>Nenhum vídeo cadastrado.</p>";
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  data.forEach(video => {
+    const div = document.createElement("div");
+    div.classList.add("produto-admin");
+
+    div.innerHTML = `
+      <video
+        src="${video.video_url}"
+        controls
+        style="width:110px;height:190px;object-fit:cover;border-radius:14px;background:#000;"
+      ></video>
+
+      <div class="produto-admin-info">
+        <h3>${video.titulo || "Vídeo sem título"}</h3>
+        <p><strong>Ordem:</strong> ${video.ordem || 1}</p>
+        <p><strong>Status:</strong> ${video.ativo ? "Ativo" : "Inativo"}</p>
+
+        <div class="botoes-produto-admin">
+          <button onclick="alternarVideoHome(${video.id}, ${video.ativo})">
+            ${video.ativo ? "Desativar" : "Ativar"}
+          </button>
+
+          <button class="excluir-produto" onclick="excluirVideoHome(${video.id})">
+            Excluir
+          </button>
+        </div>
+      </div>
+    `;
+
+    lista.appendChild(div);
+  });
+}
+
+async function alternarVideoHome(id, ativoAtual){
+  const { error } = await supabaseClient
+    .from("videos_home")
+    .update({ ativo: !ativoAtual })
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao alterar vídeo.");
+    return;
+  }
+
+  carregarVideosAdmin();
+}
+
+async function excluirVideoHome(id){
+  if(!confirm("Deseja excluir este vídeo?")){
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("videos_home")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao excluir vídeo.");
+    return;
+  }
+
+  alert("Vídeo excluído!");
+  carregarVideosAdmin();
 }
 
 verificarAdmin();

@@ -49,6 +49,7 @@
   <button onclick="mostrarAba('xls')">Importar XLS</button>
   <button onclick="mostrarAba('cupons')">Cupons</button>
   <button onclick="mostrarAba('banners')">Banners / Folders</button>
+  <button onclick="mostrarAba('videos')">Vídeos Home</button>
   <button onclick="mostrarAba('imagens')">Produtos sem imagem</button>
 </section>
 
@@ -180,6 +181,27 @@
 
   <h2 class="titulo-admin">Banners cadastrados</h2>
   <div id="listaBannersAdmin"></div>
+</section>
+
+<section class="admin-area escondido" id="abaVideos">
+  <h2 class="titulo-admin">Vídeos da Página Inicial</h2>
+
+  <div class="form-produto">
+    <label>Título do vídeo</label>
+    <input type="text" id="videoTitulo">
+
+    <label>Ordem</label>
+    <input type="number" id="videoOrdem" value="1">
+
+    <label>Vídeo</label>
+    <input type="file" id="videoArquivo" accept="video/*">
+
+    <button class="botao confirmar" onclick="salvarVideoHome()">
+      Salvar Vídeo
+    </button>
+  </div>
+
+  <div id="listaVideosAdmin"></div>
 </section>
 
 <section class="admin-area escondido" id="abaImagens">

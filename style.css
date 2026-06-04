@@ -1253,3 +1253,41 @@ header{
     width:92%;
   }
 }
+
+.area-videos-home{
+  margin-top:25px;
+}
+
+.area-videos-home h2{
+  color:#0057b8;
+  margin-bottom:15px;
+  font-size:26px;
+}
+
+.videos-home{
+  display:flex;
+  gap:15px;
+  overflow-x:auto;
+  padding:10px 5px 20px;
+}
+
+.videos-home video{
+  width:180px;
+  height:320px;
+  object-fit:cover;
+  border-radius:22px;
+  background:#000;
+  box-shadow:0 8px 22px rgba(0,0,0,0.18);
+  flex-shrink:0;
+}
+
+@media(max-width:768px){
+  .area-videos-home h2{
+    font-size:20px;
+  }
+
+  .videos-home video{
+    width:135px;
+    height:240px;
+  }
+}

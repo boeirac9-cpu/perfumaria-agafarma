@@ -1280,3 +1280,37 @@ function voltarPagina(){
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }
+
+async function carregarVideosHome(){
+
+  const area = document.getElementById("videosHome");
+
+  if(!area){
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("videos_home")
+    .select("*")
+    .eq("ativo", true)
+    .order("ordem", { ascending:true });
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+  area.innerHTML = "";
+
+  data.forEach(video => {
+
+    area.innerHTML += `
+      <video controls preload="metadata">
+        <source src="${video.video_url}" type="video/mp4">
+      </video>
+    `;
+
+  });
+}
+
+carregarVideosHome();
