@@ -2,6 +2,7 @@ let carrinho = [];
 let clienteLogado = JSON.parse(localStorage.getItem("clienteLogadoAgafarma")) || null;
 let produtos = [];
 let paginaAtual = 1;
+let buscaAtual = "";
 const produtosPorPagina = 350;
 let cupomAtual = null;
 
@@ -38,11 +39,18 @@ async function carregarProdutos(){
   const inicio = (paginaAtual - 1) * produtosPorPagina;
 const fim = inicio + produtosPorPagina - 1;
 
-const { data, error } = await supabaseClient
+let consulta = supabaseClient
   .from("produtos")
   .select("*")
-  .order("id", { ascending: false })
-  .range(inicio, fim);
+  .order("id", { ascending: false });
+
+if(buscaAtual){
+  consulta = consulta.or(
+    `nome.ilike.%${buscaAtual}%,marca.ilike.%${buscaAtual}%,laboratorio.ilike.%${buscaAtual}%,descricao.ilike.%${buscaAtual}%`
+  );
+}
+
+const { data, error } = await consulta.range(inicio, fim);
 
   if(error){
     console.log(error);
@@ -357,18 +365,16 @@ function removerAcentos(texto){
 }
 
 function pesquisarProduto(){
-  const valorPesquisa = removerAcentos(
-    document.getElementById("campoPesquisa").value
-  );
+  buscaAtual = document.getElementById("campoPesquisa").value.trim();
 
-  document.querySelectorAll(".card").forEach(card => {
-    const textoProduto = removerAcentos(card.innerText);
+  paginaAtual = 1;
 
-    card.style.display =
-      textoProduto.includes(valorPesquisa)
-      ? "block"
-      : "none";
-  });
+  const numeroPagina = document.getElementById("numeroPagina");
+  if(numeroPagina){
+    numeroPagina.innerHTML = "Página 1";
+  }
+
+  carregarProdutos();
 }
 
 function criarModalLogin(){
