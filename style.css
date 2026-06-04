@@ -1154,54 +1154,65 @@ header{
 }
 
 .barra-contato{
+  width:100%;
   background:#0057b8;
   color:white;
-  margin:25px auto;
-  padding:25px;
-  border-radius:20px;
-  max-width:1100px;
+  padding:30px 40px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:20px;
+  box-sizing:border-box;
 }
 
 .barra-contato h2{
   margin:0;
-  font-size:26px;
+  font-size:32px;
 }
 
 .barra-contato p{
-  margin:6px 0 0;
+  margin-top:8px;
+  font-size:18px;
 }
 
 .botoes-contato{
   display:flex;
-  gap:12px;
+  gap:15px;
 }
 
-.botoes-contato a{
-  background:white;
-  color:#0057b8;
-  padding:12px 18px;
-  border-radius:12px;
+.btn-whats{
+  background:#25D366;
+  color:white;
   text-decoration:none;
-  font-weight:800;
+  padding:14px 22px;
+  border-radius:12px;
+  font-weight:700;
+}
+
+.btn-instagram{
+  background:#E1306C;
+  color:white;
+  text-decoration:none;
+  padding:14px 22px;
+  border-radius:12px;
+  font-weight:700;
 }
 
 @media(max-width:768px){
   .barra-contato{
-    margin:20px 10px;
     flex-direction:column;
     text-align:center;
+    padding:25px 15px;
   }
 
   .botoes-contato{
-    flex-direction:column;
     width:100%;
+    flex-direction:column;
   }
 
-  .botoes-contato a{
+  .btn-whats,
+  .btn-instagram{
     width:100%;
+    box-sizing:border-box;
   }
 }
