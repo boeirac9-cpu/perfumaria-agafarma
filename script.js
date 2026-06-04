@@ -50,6 +50,10 @@ let consulta = supabaseClient
   .select("*")
   .order("id", { ascending: false });
 
+if(paginaAtual === 1 && !buscaAtual){
+  consulta = consulta.eq("destaque_home", true);
+}
+
 if(buscaAtual){
   consulta = consulta.or(
     `nome.ilike.%${buscaAtual}%,marca.ilike.%${buscaAtual}%,laboratorio.ilike.%${buscaAtual}%,descricao.ilike.%${buscaAtual}%`
@@ -1305,10 +1309,14 @@ async function carregarVideosHome(){
   data.forEach(video => {
 
     area.innerHTML += `
-      <video controls preload="metadata">
-        <source src="${video.video_url}" type="video/mp4">
-      </video>
-    `;
+  <div class="video-home-card">
+    <h3>${video.titulo || "Oferta em vídeo"}</h3>
+
+    <video controls preload="metadata">
+      <source src="${video.video_url}" type="video/mp4">
+    </video>
+  </div>
+`;
 
   });
 }

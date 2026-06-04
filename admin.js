@@ -437,6 +437,10 @@ async function carregarProdutosAdmin(){
             ${produto.promocao ? "Remover promoção" : "Colocar em promoção"}
           </button>
 
+          <button onclick="alternarDestaqueHome(${produto.id}, ${produto.destaque_home})">
+  ${produto.destaque_home ? "Remover da página inicial" : "Colocar na página inicial"}
+</button>
+
           <button class="excluir-produto" onclick="excluirProduto(${produto.id})">
             Excluir
           </button>
@@ -1761,6 +1765,21 @@ async function excluirVideoHome(id){
 
   alert("Vídeo excluído!");
   carregarVideosAdmin();
+}
+
+async function alternarDestaqueHome(id, destaqueAtual){
+  const { error } = await supabaseClient
+    .from("produtos")
+    .update({ destaque_home: !destaqueAtual })
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao alterar destaque da página inicial.");
+    return;
+  }
+
+  carregarProdutosAdmin();
 }
 
 verificarAdmin();
