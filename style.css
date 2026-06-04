@@ -228,7 +228,7 @@ header{
 /* PRODUTOS */
 
 .produtos{
-  padding:30px 35px 190px;
+  padding:30px 35px 0;
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,250px));
   justify-content:center;
@@ -1214,5 +1214,42 @@ header{
   .btn-instagram{
     width:100%;
     box-sizing:border-box;
+  }
+}
+
+/* AJUSTES FINAIS HOME */
+
+.produtos{
+  padding-bottom:0 !important;
+  margin-bottom:0 !important;
+}
+
+.paginacao{
+  margin-top:15px !important;
+  margin-bottom:20px !important;
+}
+
+/* Carrinho escondido, aparece só ao clicar no botão azul */
+.carrinho-lateral{
+  display:none !important;
+}
+
+.carrinho-lateral.ativo{
+  display:block !important;
+  position:fixed;
+  top:95px;
+  right:20px;
+  bottom:auto;
+  width:360px;
+  max-height:75vh;
+  z-index:9999;
+}
+
+@media(max-width:768px){
+  .carrinho-lateral.ativo{
+    top:80px;
+    left:4%;
+    right:auto;
+    width:92%;
   }
 }
