@@ -344,12 +344,91 @@ function fecharMenu(){
   document.getElementById("menuLateral").classList.remove("ativo");
 }
 
-function filtrarCategoria(categoria){
-  document.querySelectorAll(".card").forEach(card => {
-    card.style.display =
-      categoria === "todos" || card.dataset.categoria === categoria
-      ? "block"
-      : "none";
+async function filtrarCategoria(categoria){
+  buscaAtual = "";
+
+  if(categoria === "todos"){
+    paginaAtual = 1;
+    await carregarProdutos();
+    fecharMenu();
+    return;
+  }
+
+  listaProdutos.innerHTML = "<p class='sem-pedidos'>Carregando categoria...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("produtos")
+    .select("*")
+    .eq("categoria", categoria)
+    .order("id", { ascending:false })
+    .range(0, 349);
+
+  if(error){
+    console.log(error);
+    listaProdutos.innerHTML = "<p class='sem-pedidos'>Erro ao carregar categoria.</p>";
+    return;
+  }
+
+  produtos = data || [];
+  listaProdutos.innerHTML = "";
+
+  if(produtos.length === 0){
+    listaProdutos.innerHTML = "<p class='sem-pedidos'>Nenhum produto nesta categoria.</p>";
+    fecharMenu();
+    return;
+  }
+
+  produtos.forEach(produto => {
+    const precoFinal = calcularPrecoFinal(produto);
+    const desconto = Number(produto.desconto) || 0;
+
+    const card = document.createElement("div");
+    card.classList.add("card");
+
+    card.innerHTML = `
+      <img src="${produto.imagem || "logo.png"}" alt="${produto.nome || "Produto"}">
+
+      <div class="info">
+        <span class="categoria">
+          ${produto.promocao ? "🔥 Promoção" : produto.categoria}
+        </span>
+
+        <h2>${produto.nome}</h2>
+
+        <p>Marca: ${produto.marca || "Não informado"}</p>
+        <p>Laboratório: ${produto.laboratorio || "Não informado"}</p>
+        <p>${produto.descricao || ""}</p>
+        <p>Estoque: ${produto.quantidade}</p>
+
+        ${
+          produto.promocao && desconto > 0
+          ? `
+            <div class="preco-antigo">
+              R$ ${Number(produto.valor).toFixed(2).replace(".", ",")}
+            </div>
+
+            <div class="preco">
+              R$ ${precoFinal.toFixed(2).replace(".", ",")}
+            </div>
+
+            <p class="desconto-produto">
+              ${desconto}% OFF
+            </p>
+          `
+          : `
+            <div class="preco">
+              R$ ${Number(produto.valor).toFixed(2).replace(".", ",")}
+            </div>
+          `
+        }
+
+        <button class="botao" onclick="adicionarCarrinho(${produto.id})">
+          Adicionar ao carrinho
+        </button>
+      </div>
+    `;
+
+    listaProdutos.appendChild(card);
   });
 
   fecharMenu();
