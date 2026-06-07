@@ -390,10 +390,14 @@ async function salvarProduto(){
   carregarProdutosSemImagem();
 }
 
+let paginaAdminAtual = 1;
+const produtosPorPaginaAdmin = 100;
+let todosProdutosAdmin = [];
+
 async function carregarProdutosAdmin(){
   listaProdutosAdmin.innerHTML = "<p class='sem-pedidos'>Carregando produtos...</p>";
 
-  let todosProdutos = [];
+  todosProdutosAdmin = [];
   let pagina = 0;
   const tamanhoPagina = 1000;
 
@@ -417,7 +421,7 @@ async function carregarProdutosAdmin(){
       break;
     }
 
-    todosProdutos = todosProdutos.concat(data);
+    todosProdutosAdmin = todosProdutosAdmin.concat(data);
 
     if(data.length < tamanhoPagina){
       break;
@@ -426,18 +430,40 @@ async function carregarProdutosAdmin(){
     pagina++;
   }
 
-  if(todosProdutos.length === 0){
+  paginaAdminAtual = 1;
+  mostrarPaginaProdutosAdmin();
+}
+
+function mostrarPaginaProdutosAdmin(){
+  if(!todosProdutosAdmin || todosProdutosAdmin.length === 0){
     listaProdutosAdmin.innerHTML = "<p class='sem-pedidos'>Nenhum produto cadastrado.</p>";
     return;
   }
 
+  const totalPaginas = Math.ceil(todosProdutosAdmin.length / produtosPorPaginaAdmin);
+  const inicio = (paginaAdminAtual - 1) * produtosPorPaginaAdmin;
+  const fim = inicio + produtosPorPaginaAdmin;
+
+  const produtosPagina = todosProdutosAdmin.slice(inicio, fim);
+
   listaProdutosAdmin.innerHTML = `
     <p class='sem-pedidos'>
-      Total de produtos: <strong>${todosProdutos.length}</strong>
+      Total de produtos: <strong>${todosProdutosAdmin.length}</strong><br>
+      Página <strong>${paginaAdminAtual}</strong> de <strong>${totalPaginas}</strong>
     </p>
+
+    <div style="display:flex;gap:10px;justify-content:center;margin:15px 0;flex-wrap:wrap;">
+      <button onclick="paginaAnteriorAdmin()" ${paginaAdminAtual === 1 ? "disabled" : ""}>
+        ⬅️ Anterior
+      </button>
+
+      <button onclick="proximaPaginaAdmin()" ${paginaAdminAtual === totalPaginas ? "disabled" : ""}>
+        Próxima ➡️
+      </button>
+    </div>
   `;
 
-  todosProdutos.forEach(produto => {
+  produtosPagina.forEach(produto => {
     const div = document.createElement("div");
     div.classList.add("produto-admin");
 
@@ -476,6 +502,24 @@ async function carregarProdutosAdmin(){
 
     listaProdutosAdmin.appendChild(div);
   });
+}
+
+function paginaAnteriorAdmin(){
+  if(paginaAdminAtual > 1){
+    paginaAdminAtual--;
+    mostrarPaginaProdutosAdmin();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function proximaPaginaAdmin(){
+  const totalPaginas = Math.ceil(todosProdutosAdmin.length / produtosPorPaginaAdmin);
+
+  if(paginaAdminAtual < totalPaginas){
+    paginaAdminAtual++;
+    mostrarPaginaProdutosAdmin();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 }
 
 async function editarProduto(id){
