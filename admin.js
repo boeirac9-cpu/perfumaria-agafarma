@@ -477,8 +477,35 @@ function mostrarPaginaProdutosAdmin(){
         <p><strong>Marca:</strong> ${produto.marca || "Não informado"}</p>
         <p><strong>Laboratório:</strong> ${produto.laboratorio || "Não informado"}</p>
         <p><strong>Categoria:</strong> ${produto.categoria || "Não informado"}</p>
-        <p><strong>Estoque:</strong> ${produto.quantidade}</p>
-        <p><strong>Valor:</strong> R$ ${Number(produto.valor).toFixed(2).replace(".", ",")}</p>
+<p><strong>Estoque:</strong> ${produto.quantidade}</p>
+<p><strong>Valor:</strong> R$ ${Number(produto.valor).toFixed(2).replace(".", ",")}</p>
+
+<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:10px;">
+  <input
+    id="editNome${produto.id}"
+    value="${produto.nome || ""}"
+    placeholder="Nome"
+    style="width:100%;margin-bottom:6px;"
+  >
+
+  <input
+    id="editCategoria${produto.id}"
+    value="${produto.categoria || ""}"
+    placeholder="Categoria"
+    style="width:100%;margin-bottom:6px;"
+  >
+
+  <input
+    id="editImagem${produto.id}"
+    value="${produto.imagem || ""}"
+    placeholder="Link da imagem"
+    style="width:100%;margin-bottom:6px;"
+  >
+
+  <button onclick="salvarEdicaoRapidaProduto(${produto.id})">
+    💾 Salvar rápido
+  </button>
+</div>
 
         <div class="botoes-produto-admin">
           <button onclick="editarProduto(${produto.id})">
@@ -510,6 +537,29 @@ function paginaAnteriorAdmin(){
     mostrarPaginaProdutosAdmin();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+}
+
+async function salvarEdicaoRapidaProduto(id){
+  const nome = document.getElementById(`editNome${id}`).value;
+  const categoria = document.getElementById(`editCategoria${id}`).value;
+  const imagem = document.getElementById(`editImagem${id}`).value;
+
+  const { error } = await supabaseClient
+    .from("produtos")
+    .update({
+      nome,
+      categoria,
+      imagem
+    })
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao salvar.");
+    return;
+  }
+
+  alert("Produto atualizado!");
 }
 
 function proximaPaginaAdmin(){
