@@ -506,9 +506,6 @@ function mostrarPaginaProdutosAdmin(){
     style="width:100%;margin-bottom:6px;"
   >
 
-  <button type="button" onclick="salvarEdicaoRapidaProduto(event, ${produto.id})">
-  💾 Salvar rápido
-</button>
 </div>
 
         <div class="botoes-produto-admin">
@@ -533,6 +530,14 @@ function mostrarPaginaProdutosAdmin(){
 
     listaProdutosAdmin.appendChild(div);
   });
+
+  const botaoSalvarTodos = document.createElement("button");
+  botaoSalvarTodos.type = "button";
+  botaoSalvarTodos.innerHTML = "💾 Salvar todas as alterações desta página";
+  botaoSalvarTodos.style.cssText = "width:100%;padding:15px;margin:20px 0;font-size:18px;font-weight:bold;background:#0057b8;color:white;border:none;border-radius:12px;cursor:pointer;";
+  botaoSalvarTodos.onclick = salvarTodosProdutosPagina;
+
+  listaProdutosAdmin.appendChild(botaoSalvarTodos);
 }
 
 function paginaAnteriorAdmin(){
@@ -546,7 +551,7 @@ function paginaAnteriorAdmin(){
 async function salvarEdicaoRapidaProduto(event, id){
   event.preventDefault();
   event.stopPropagation();
-  
+
   const nome = document.getElementById(`editNome${id}`).value;
   const categoria = document.getElementById(`editCategoria${id}`).value;
   const imagem = document.getElementById(`editImagem${id}`).value;
@@ -579,38 +584,52 @@ function proximaPaginaAdmin(){
   }
 }
 
-async function salvarEdicaoRapidaProduto(id){
-  const nome = document.getElementById(`editNome${id}`).value.trim();
-  const categoria = document.getElementById(`editCategoria${id}`).value;
-  const arquivoImagem = document.getElementById(`editImagem${id}`).files[0];
+async function salvarTodosProdutosPagina(){
+  const inicio = (paginaAdminAtual - 1) * produtosPorPaginaAdmin;
+  const fim = inicio + produtosPorPaginaAdmin;
+  const produtosPagina = todosProdutosAdmin.slice(inicio, fim);
 
-  if(nome === ""){
-    alert("O nome não pode ficar vazio.");
+  if(!confirm("Salvar todas as alterações desta página?")){
     return;
   }
 
-  let dadosAtualizacao = {
-    nome,
-    categoria
-  };
+  let salvos = 0;
+  let erros = 0;
 
-  if(arquivoImagem){
-    const imagemBase64 = await converterImagemParaBase64(arquivoImagem);
-    dadosAtualizacao.imagem = imagemBase64;
+  for(const produto of produtosPagina){
+    const nome = document.getElementById(`editNome${produto.id}`).value.trim();
+    const categoria = document.getElementById(`editCategoria${produto.id}`).value;
+    const arquivoImagem = document.getElementById(`editImagem${produto.id}`).files[0];
+
+    if(nome === ""){
+      erros++;
+      continue;
+    }
+
+    const dadosAtualizacao = {
+      nome,
+      categoria
+    };
+
+    if(arquivoImagem){
+      dadosAtualizacao.imagem = await converterImagemParaBase64(arquivoImagem);
+    }
+
+    const { error } = await supabaseClient
+      .from("produtos")
+      .update(dadosAtualizacao)
+      .eq("id", produto.id);
+
+    if(error){
+      console.log(error);
+      erros++;
+    } else {
+      salvos++;
+    }
   }
 
-  const { error } = await supabaseClient
-    .from("produtos")
-    .update(dadosAtualizacao)
-    .eq("id", id);
+  alert(`Alterações salvas!\nProdutos salvos: ${salvos}\nErros: ${erros}`);
 
-  if(error){
-    console.log(error);
-    alert("Erro ao salvar.");
-    return;
-  }
-
-  alert("Produto atualizado!");
   carregarProdutosAdmin();
 }
 
