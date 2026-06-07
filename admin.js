@@ -506,9 +506,9 @@ function mostrarPaginaProdutosAdmin(){
     style="width:100%;margin-bottom:6px;"
   >
 
-  <button onclick="salvarEdicaoRapidaProduto(${produto.id})">
-    💾 Salvar rápido
-  </button>
+  <button type="button" onclick="salvarEdicaoRapidaProduto(${produto.id})">
+  💾 Salvar rápido
+</button>
 </div>
 
         <div class="botoes-produto-admin">
