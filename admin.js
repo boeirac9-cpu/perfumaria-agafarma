@@ -393,25 +393,51 @@ async function salvarProduto(){
 async function carregarProdutosAdmin(){
   listaProdutosAdmin.innerHTML = "<p class='sem-pedidos'>Carregando produtos...</p>";
 
-  const { data, error } = await supabaseClient
-    .from("produtos")
-    .select("*")
-    .order("id", { ascending:false });
+  let todosProdutos = [];
+  let pagina = 0;
+  const tamanhoPagina = 1000;
 
-  if(error){
-    console.log(error);
-    listaProdutosAdmin.innerHTML = "<p class='sem-pedidos'>Erro ao carregar produtos.</p>";
-    return;
+  while(true){
+    const inicio = pagina * tamanhoPagina;
+    const fim = inicio + tamanhoPagina - 1;
+
+    const { data, error } = await supabaseClient
+      .from("produtos")
+      .select("*")
+      .order("id", { ascending:false })
+      .range(inicio, fim);
+
+    if(error){
+      console.log(error);
+      listaProdutosAdmin.innerHTML = "<p class='sem-pedidos'>Erro ao carregar produtos.</p>";
+      return;
+    }
+
+    if(!data || data.length === 0){
+      break;
+    }
+
+    todosProdutos = todosProdutos.concat(data);
+
+    if(data.length < tamanhoPagina){
+      break;
+    }
+
+    pagina++;
   }
 
-  if(!data || data.length === 0){
+  if(todosProdutos.length === 0){
     listaProdutosAdmin.innerHTML = "<p class='sem-pedidos'>Nenhum produto cadastrado.</p>";
     return;
   }
 
-  listaProdutosAdmin.innerHTML = "";
+  listaProdutosAdmin.innerHTML = `
+    <p class='sem-pedidos'>
+      Total de produtos: <strong>${todosProdutos.length}</strong>
+    </p>
+  `;
 
-  data.forEach(produto => {
+  todosProdutos.forEach(produto => {
     const div = document.createElement("div");
     div.classList.add("produto-admin");
 
@@ -438,8 +464,8 @@ async function carregarProdutosAdmin(){
           </button>
 
           <button onclick="alternarDestaqueHome(${produto.id}, ${produto.destaque_home})">
-  ${produto.destaque_home ? "Remover da página inicial" : "Colocar na página inicial"}
-</button>
+            ${produto.destaque_home ? "Remover da página inicial" : "Colocar na página inicial"}
+          </button>
 
           <button class="excluir-produto" onclick="excluirProduto(${produto.id})">
             Excluir
