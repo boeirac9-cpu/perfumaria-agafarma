@@ -506,7 +506,7 @@ function mostrarPaginaProdutosAdmin(){
     style="width:100%;margin-bottom:6px;"
   >
 
-  <button type="button" onclick="salvarEdicaoRapidaProduto(${produto.id})">
+  <button type="button" onclick="salvarEdicaoRapidaProduto(event, ${produto.id})">
   💾 Salvar rápido
 </button>
 </div>
@@ -543,7 +543,10 @@ function paginaAnteriorAdmin(){
   }
 }
 
-async function salvarEdicaoRapidaProduto(id){
+async function salvarEdicaoRapidaProduto(event, id){
+  event.preventDefault();
+  event.stopPropagation();
+  
   const nome = document.getElementById(`editNome${id}`).value;
   const categoria = document.getElementById(`editCategoria${id}`).value;
   const imagem = document.getElementById(`editImagem${id}`).value;
