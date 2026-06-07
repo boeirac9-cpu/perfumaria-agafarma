@@ -488,17 +488,21 @@ function mostrarPaginaProdutosAdmin(){
     style="width:100%;margin-bottom:6px;"
   >
 
-  <input
-    id="editCategoria${produto.id}"
-    value="${produto.categoria || ""}"
-    placeholder="Categoria"
-    style="width:100%;margin-bottom:6px;"
-  >
+  <select id="editCategoria${produto.id}" style="width:100%;margin-bottom:6px;">
+    <option value="higiene" ${produto.categoria === "higiene" ? "selected" : ""}>Higiene</option>
+    <option value="cabelo" ${produto.categoria === "cabelo" ? "selected" : ""}>Cabelo</option>
+    <option value="corpo" ${produto.categoria === "corpo" ? "selected" : ""}>Corpo</option>
+    <option value="perfumes" ${produto.categoria === "perfumes" ? "selected" : ""}>Perfumes</option>
+    <option value="skincare" ${produto.categoria === "skincare" ? "selected" : ""}>Skincare</option>
+    <option value="maquiagem" ${produto.categoria === "maquiagem" ? "selected" : ""}>Maquiagem</option>
+    <option value="infantil" ${produto.categoria === "infantil" ? "selected" : ""}>Infantil</option>
+    <option value="leites" ${produto.categoria === "leites" ? "selected" : ""}>Leites</option>
+  </select>
 
   <input
     id="editImagem${produto.id}"
-    value="${produto.imagem || ""}"
-    placeholder="Link da imagem"
+    type="file"
+    accept="image/*"
     style="width:100%;margin-bottom:6px;"
   >
 
@@ -572,37 +576,49 @@ function proximaPaginaAdmin(){
   }
 }
 
-async function editarProduto(id){
-  const { data, error } = await supabaseClient
-    .from("produtos")
-    .select("*")
-    .eq("id", id)
-    .single();
+async function salvarEdicaoRapidaProduto(id){
+  const nome = document.getElementById(`editNome${id}`).value.trim();
+  const categoria = document.getElementById(`editCategoria${id}`).value;
+  const arquivoImagem = document.getElementById(`editImagem${id}`).files[0];
 
-  if(error){
-    console.log(error);
-    alert("Erro ao carregar produto.");
+  if(nome === ""){
+    alert("O nome não pode ficar vazio.");
     return;
   }
 
-  produtoEditandoId = id;
+  let dadosAtualizacao = {
+    nome,
+    categoria
+  };
 
-  document.getElementById("produtoCodigoBarras").value = data.codigo || "";
-  document.getElementById("produtoNome").value = data.nome || "";
-  document.getElementById("produtoMarca").value = data.marca || "";
-  document.getElementById("produtoLaboratorio").value = data.laboratorio || "";
-  document.getElementById("produtoDescricao").value = data.descricao || "";
-  document.getElementById("produtoValor").value = data.valor || 0;
-  document.getElementById("produtoDesconto").value = data.desconto || 0;
-  document.getElementById("produtoQuantidade").value = data.quantidade || 0;
-  document.getElementById("produtoCategoria").value = data.categoria || "higiene";
-  document.getElementById("previewImagem").src = data.imagem || "logo.png";
+  if(arquivoImagem){
+    const imagemBase64 = await converterImagemParaBase64(arquivoImagem);
+    dadosAtualizacao.imagem = imagemBase64;
+  }
 
-  mostrarAba("produtos");
+  const { error } = await supabaseClient
+    .from("produtos")
+    .update(dadosAtualizacao)
+    .eq("id", id);
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
+  if(error){
+    console.log(error);
+    alert("Erro ao salvar.");
+    return;
+  }
+
+  alert("Produto atualizado!");
+  carregarProdutosAdmin();
+}
+
+function converterImagemParaBase64(arquivo){
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+
+    leitor.onload = () => resolve(leitor.result);
+    leitor.onerror = reject;
+
+    leitor.readAsDataURL(arquivo);
   });
 }
 
