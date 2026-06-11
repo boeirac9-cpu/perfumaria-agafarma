@@ -46,6 +46,7 @@
 <section class="abas-admin">
   <button onclick="mostrarAba('pedidos')">Pedidos</button>
   <button onclick="mostrarAba('produtos')">Adicionar Produto</button>
+  <button onclick="mostrarAba('categorias')">Categorias</button>
   <button onclick="mostrarAba('xls')">Importar XLS</button>
   <button onclick="mostrarAba('cupons')">Cupons</button>
   <button onclick="mostrarAba('banners')">Banners / Folders</button>
@@ -56,6 +57,22 @@
 <section class="admin-area" id="abaPedidos">
   <h2 class="titulo-admin">Pedidos Recebidos</h2>
   <div id="listaPedidos"></div>
+</section>
+
+<section class="admin-card">
+  <h2>Categorias da loja</h2>
+
+  <input
+    type="text"
+    id="nomeCategoria"
+    placeholder="Ex: Cabelo, Corpo, Perfumes"
+  >
+
+  <button onclick="salvarCategoria()">
+    Salvar Categoria
+  </button>
+
+  <div id="listaCategoriasAdmin"></div>
 </section>
 
 <section class="admin-area escondido" id="abaProdutos">

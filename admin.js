@@ -66,6 +66,7 @@ function abrirPainelAdmin(){
   carregarPedidos();
   carregarProdutosAdmin();
   carregarCuponsAdmin();
+  carregarCategoriasNoProduto();
 
   iniciarImpressaoAutomatica();
 }
@@ -81,6 +82,12 @@ function mostrarAba(aba){
   document.getElementById("abaPedidos").classList.add("escondido");
   document.getElementById("abaProdutos").classList.add("escondido");
   document.getElementById("abaCupons").classList.add("escondido");
+
+  const abaCategorias = document.getElementById("abaCategorias");
+
+if(abaCategorias){
+  abaCategorias.classList.add("escondido");
+}
 
   const abaBanners = document.getElementById("abaBanners");
   const abaVideos = document.getElementById("abaVideos");
@@ -110,6 +117,11 @@ function mostrarAba(aba){
     document.getElementById("abaCupons").classList.remove("escondido");
     carregarCuponsAdmin();
   }
+
+  if(aba === "categorias" && abaCategorias){
+  abaCategorias.classList.remove("escondido");
+  carregarCategoriasAdmin();
+}
 
   if(aba === "banners" && abaBanners){
     abaBanners.classList.remove("escondido");
@@ -1938,6 +1950,131 @@ async function alternarDestaqueHome(id, destaqueAtual){
   }
 
   carregarProdutosAdmin();
+}
+
+function criarSlugCategoria(nome){
+  return String(nome || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+async function salvarCategoria(){
+
+  const nome = document.getElementById("nomeCategoria").value.trim();
+
+  if(!nome){
+    alert("Digite o nome da categoria.");
+    return;
+  }
+
+  const slug = criarSlugCategoria(nome);
+
+  const { error } = await supabaseClient
+    .from("categorias")
+    .insert([{
+      nome,
+      slug,
+      ativo:true
+    }]);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao salvar categoria.");
+    return;
+  }
+
+  document.getElementById("nomeCategoria").value = "";
+
+  carregarCategoriasAdmin();
+
+  alert("Categoria criada!");
+}
+
+async function carregarCategoriasAdmin(){
+
+  const lista = document.getElementById("listaCategoriasAdmin");
+
+  if(!lista) return;
+
+  const { data, error } = await supabaseClient
+    .from("categorias")
+    .select("*")
+    .order("nome");
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  data.forEach(cat => {
+
+    lista.innerHTML += `
+      <div class="pedido-card">
+        <h3>${cat.nome}</h3>
+
+        <button
+          class="excluir-produto"
+          onclick="excluirCategoria(${cat.id})"
+        >
+          Excluir
+        </button>
+      </div>
+    `;
+  });
+}
+
+async function excluirCategoria(id){
+
+  if(!confirm("Excluir categoria?")){
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("categorias")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao excluir.");
+    return;
+  }
+
+  carregarCategoriasAdmin();
+}
+
+async function carregarCategoriasNoProduto(){
+
+  const select = document.getElementById("produtoCategoria");
+
+  if(!select) return;
+
+  const { data, error } = await supabaseClient
+    .from("categorias")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+  select.innerHTML = "";
+
+  data.forEach(cat => {
+    select.innerHTML += `
+      <option value="${cat.slug}">
+        ${cat.nome}
+      </option>
+    `;
+  });
 }
 
 verificarAdmin();
