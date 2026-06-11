@@ -59,19 +59,24 @@
   <div id="listaPedidos"></div>
 </section>
 
-<section class="admin-card">
-  <h2>Categorias da loja</h2>
+<section class="admin-area escondido" id="abaCategorias">
+  <h2 class="titulo-admin">Categorias da Loja</h2>
 
-  <input
-    type="text"
-    id="nomeCategoria"
-    placeholder="Ex: Cabelo, Corpo, Perfumes"
-  >
+  <div class="form-produto">
+    <label>Nome da categoria</label>
 
-  <button onclick="salvarCategoria()">
-    Salvar Categoria
-  </button>
+    <input
+      type="text"
+      id="nomeCategoria"
+      placeholder="Ex: Cabelo, Corpo, Perfumes"
+    >
 
+    <button class="botao confirmar" onclick="salvarCategoria()">
+      Salvar Categoria
+    </button>
+  </div>
+
+  <h2 class="titulo-admin">Categorias Cadastradas</h2>
   <div id="listaCategoriasAdmin"></div>
 </section>
 
