@@ -13,6 +13,8 @@ OneSignalDeferred.push(async function(OneSignal) {
   await OneSignal.init({
     appId: "3acd358f-936f-44c6-982c-efb9f42b5cd5",
   });
+
+  await OneSignal.Notifications.requestPermission();
 });
 </script>
 </head>
