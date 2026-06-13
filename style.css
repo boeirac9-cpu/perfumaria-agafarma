@@ -1416,42 +1416,42 @@ img{
   -webkit-user-drag:none;
 }
 
-/* BANNERS DEFINITIVO */
+/* BANNER AGAFARMA */
 
 .banner-slider{
   width:94%;
   max-width:1200px;
-  height:400px;
-  margin:25px auto 35px;
+  margin:20px auto;
   border:4px solid #0057b8;
   border-radius:25px;
   overflow:hidden;
   background:white;
-  position:relative;
 }
 
 #bannersDinamicos{
   width:100%;
-  height:100%;
 }
 
-#bannersDinamicos .slide{
+.slide{
   display:none;
-  width:100%;
-  height:100%;
 }
 
-#bannersDinamicos .slide.ativo{
+.slide.ativo{
   display:block;
 }
 
-#bannersDinamicos .slide img{
+.slide img{
   width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
+  height:auto;
   display:block;
-  border-radius:0;
+}
+
+@media(max-width:768px){
+  .banner-slider{
+    width:95%;
+    border:3px solid #0057b8;
+    border-radius:18px;
+  }
 }
 
 @media(max-width:768px){
