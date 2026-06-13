@@ -1415,3 +1415,48 @@ img{
   user-select:none;
   -webkit-user-drag:none;
 }
+
+/* CORREÇÃO FINAL DOS BANNERS */
+
+.banner-slider{
+  width:94% !important;
+  max-width:1200px !important;
+  height:400px !important;
+  margin:25px auto 35px !important;
+  position:relative !important;
+  overflow:hidden !important;
+  border-radius:25px !important;
+  background:white !important;
+  border:4px solid #0057b8 !important;
+}
+
+#bannersDinamicos{
+  width:100% !important;
+  height:100% !important;
+}
+
+.slide{
+  display:none !important;
+  width:100% !important;
+  height:100% !important;
+}
+
+.slide.ativo{
+  display:block !important;
+}
+
+.slide img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  display:block !important;
+}
+
+@media(max-width:768px){
+  .banner-slider{
+    width:95% !important;
+    height:220px !important;
+    border-radius:18px !important;
+    border:3px solid #0057b8 !important;
+  }
+}
