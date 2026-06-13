@@ -1388,17 +1388,6 @@ header{
   }
 }
 
-.banner-slider,
-.banner-slider *{
-  user-select:none;
-}
-
-.banner-slider img{
-  pointer-events:none;
-  user-select:none;
-  -webkit-user-drag:none;
-}
-
 html,
 body{
   max-width:100%;
