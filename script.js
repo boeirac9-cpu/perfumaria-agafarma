@@ -1404,9 +1404,9 @@ carregarVideosHome();
 
 async function carregarCategoriasCliente(){
 
-  const area = document.getElementById("categoriasCliente");
+  const areas = document.querySelectorAll("#categoriasCliente, #categoriasMenuLateral");
 
-  if(!area){
+  if(!areas || areas.length === 0){
     return;
   }
 
@@ -1421,27 +1421,23 @@ async function carregarCategoriasCliente(){
     return;
   }
 
-  area.innerHTML = `
-    <button onclick="filtrarCategoria('todos')">
-      Todos
-    </button>
-  `;
-
-  data.forEach(cat => {
-
-    area.innerHTML += `
-      <button onclick="filtrarCategoria('${cat.slug}')">
-        ${cat.nome}
-      </button>
+  areas.forEach(area => {
+    area.innerHTML = `
+      <button onclick="filtrarCategoria('todos')">Todos</button>
     `;
 
-  });
+    data.forEach(cat => {
+      area.innerHTML += `
+        <button onclick="filtrarCategoria('${cat.slug}')">
+          ${cat.nome}
+        </button>
+      `;
+    });
 
-  area.innerHTML += `
-    <button onclick="filtrarPromocoes()">
-      Promoções
-    </button>
-  `;
+    area.innerHTML += `
+      <button onclick="filtrarPromocoes()">Promoções</button>
+    `;
+  });
 }
 
 carregarCategoriasCliente();
