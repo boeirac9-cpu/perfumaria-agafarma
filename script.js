@@ -1441,34 +1441,3 @@ async function carregarCategoriasCliente(){
 }
 
 carregarCategoriasCliente();
-
-async function carregarCategoriasCliente(){
-  const area = document.getElementById("categoriasCliente");
-
-  if(!area) return;
-
-  const { data, error } = await supabaseClient
-    .from("categorias")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
-
-  if(error){
-    console.log(error);
-    return;
-  }
-
-  area.innerHTML = `<button onclick="filtrarCategoria('todos')">Todos</button>`;
-
-  data.forEach(cat => {
-    area.innerHTML += `
-      <button onclick="filtrarCategoria('${cat.slug}')">
-        ${cat.nome}
-      </button>
-    `;
-  });
-
-  area.innerHTML += `<button onclick="filtrarPromocoes()">Promoções</button>`;
-}
-
-carregarCategoriasCliente();
