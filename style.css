@@ -1387,3 +1387,32 @@ header{
     text-align:center;
   }
 }
+
+.banner-slider,
+.banner-slider *{
+  user-select:none;
+}
+
+.banner-slider img{
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
+html,
+body{
+  max-width:100%;
+  overflow-x:hidden;
+  touch-action:manipulation;
+}
+
+img,
+button,
+a{
+  -webkit-tap-highlight-color: transparent;
+}
+
+img{
+  user-select:none;
+  -webkit-user-drag:none;
+}
