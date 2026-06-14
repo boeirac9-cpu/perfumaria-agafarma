@@ -1461,12 +1461,12 @@ img{
   }
 }
 
-/* BANNER TAMANHO FIXO */
+/* BANNER RESPONSIVO AUTOMÁTICO */
 
 .banner-slider{
   width:94% !important;
   max-width:1200px !important;
-  height:400px !important;
+  aspect-ratio: 16 / 5 !important;
   margin:20px auto !important;
   overflow:hidden !important;
   border:4px solid #0057b8 !important;
@@ -1474,30 +1474,32 @@ img{
   background:white !important;
 }
 
+#bannersDinamicos,
 .slide{
-  width:100%;
-  height:100%;
+  width:100% !important;
+  height:100% !important;
+}
+
+.slide{
+  display:none !important;
+}
+
+.slide.ativo{
+  display:block !important;
 }
 
 .slide img{
   width:100% !important;
   height:100% !important;
-  object-fit: contain !important;
-  display:block;
+  object-fit:cover !important;
+  display:block !important;
 }
 
 @media(max-width:768px){
-
   .banner-slider{
     width:95% !important;
-    height:220px !important;
+    aspect-ratio:16 / 5 !important;
     border:3px solid #0057b8 !important;
     border-radius:18px !important;
-  }
-
-  .slide img{
-    width:100% !important;
-    height:100% !important;
-    object-fit: contain !important;
   }
 }
