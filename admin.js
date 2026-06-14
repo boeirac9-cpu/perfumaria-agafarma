@@ -1227,31 +1227,24 @@ function extrairPrecos0003(linhas){
   const mapaPrecos = {};
 
   linhas.forEach(linha => {
-    const nome = String(linha[3] || "").trim();
-
-    if(!nome) return;
-    if(nome.toUpperCase().includes("DESCRICAO")) return;
-
-    let preco = 0;
-
-    for(let i = linha.length - 1; i >= 0; i--){
-      const valor = dinheiroParaNumero(linha[i]);
-
-      if(valor > 1 && valor < 10000){
-        preco = valor;
-        break;
-      }
-    }
-
-    if(preco <= 0) return;
 
     const codigo = String(linha[1] || "").trim();
 
-if(!codigo){
-  return;
-}
+    if(!codigo){
+      return;
+    }
 
-mapaPrecos[codigo] = preco;
+    if(codigo.toUpperCase().includes("CODIGO")){
+      return;
+    }
+
+    const preco = dinheiroParaNumero(linha[12]);
+
+    if(preco <= 0){
+      return;
+    }
+
+    mapaPrecos[codigo] = preco;
   });
 
   console.log("TOTAL DE PREÇOS LIDOS:", Object.keys(mapaPrecos).length);
