@@ -1463,53 +1463,43 @@ img{
   }
 }
 
-/* REMOVER QUADRADO DO BANNER - FINAL */
+/* BANNER TAMANHO FIXO */
 
 .banner-slider{
   width:94% !important;
-  max-width:1450px !important;
-  height:auto !important;
-  margin:25px auto 35px !important;
-  border:none !important;
-  border-radius:0 !important;
-  overflow:visible !important;
-  background:transparent !important;
-  box-shadow:none !important;
-}
-
-#bannersDinamicos{
-  width:100% !important;
-  height:auto !important;
+  max-width:1200px !important;
+  height:400px !important;
+  margin:20px auto !important;
+  overflow:hidden !important;
+  border:4px solid #0057b8 !important;
+  border-radius:25px !important;
+  background:white !important;
 }
 
 .slide{
-  display:none !important;
-  width:100% !important;
-  height:auto !important;
-}
-
-.slide.ativo{
-  display:block !important;
+  width:100%;
+  height:100%;
 }
 
 .slide img{
   width:100% !important;
-  height:auto !important;
-  object-fit:contain !important;
-  display:block !important;
-  border-radius:22px !important;
+  height:100% !important;
+  object-fit:cover !important;
+  display:block;
 }
 
 @media(max-width:768px){
+
   .banner-slider{
     width:95% !important;
-    height:auto !important;
-    border:none !important;
-    border-radius:0 !important;
+    height:220px !important;
+    border:3px solid #0057b8 !important;
+    border-radius:18px !important;
   }
 
   .slide img{
-    height:auto !important;
-    border-radius:16px !important;
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
   }
 }
