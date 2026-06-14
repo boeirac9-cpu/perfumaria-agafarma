@@ -1296,16 +1296,21 @@ async function importarXLSComPrecos(){
       }
 
       const dadosAtualizacao = {
-        nome: produto.nome,
-        laboratorio: produto.laboratorio,
-        marca: produto.marca,
-        quantidade: produto.quantidade,
-        valor: precoEncontrado > 0 ? precoEncontrado : 0,
-        desconto: 0,
-        descricao: "",
-        categoria: produto.categoria || "higiene",
-        promocao: false
-      };
+  quantidade: produto.quantidade,
+  valor: precoEncontrado > 0 ? precoEncontrado : 0
+};
+
+const dadosNovoProduto = {
+  nome: produto.nome,
+  laboratorio: produto.laboratorio,
+  marca: produto.marca,
+  quantidade: produto.quantidade,
+  valor: precoEncontrado > 0 ? precoEncontrado : 0,
+  desconto: 0,
+  descricao: "",
+  categoria: produto.categoria || "higiene",
+  promocao: false
+};
 
       const { data: produtoExiste, error: erroBusca } = await supabaseClient
         .from("produtos")
@@ -1334,10 +1339,10 @@ async function importarXLSComPrecos(){
         const { error } = await supabaseClient
           .from("produtos")
           .insert([{
-            codigo: produto.codigo,
-            ...dadosAtualizacao,
-            imagem: "logo.png"
-          }]);
+  codigo: produto.codigo,
+  ...dadosNovoProduto,
+  imagem: "logo.png"
+}]);
 
         if(!error){
           inseridos++;
