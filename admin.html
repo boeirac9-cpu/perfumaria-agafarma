@@ -159,6 +159,18 @@
 </div>
 
 <h2 class="titulo-admin">Produtos Cadastrados</h2>
+
+<div class="form-produto">
+  <label>Pesquisar produto no admin</label>
+
+  <input
+    type="text"
+    id="pesquisaAdminProdutos"
+    placeholder="Digite nome, marca, laboratório ou código reduzido"
+    onkeyup="pesquisarProdutosAdmin()"
+  >
+</div>
+
 <div id="listaProdutosAdmin"></div>
 </section>
 <section class="admin-area escondido" id="abaXls">

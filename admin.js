@@ -405,6 +405,7 @@ async function salvarProduto(){
 let paginaAdminAtual = 1;
 const produtosPorPaginaAdmin = 100;
 let todosProdutosAdmin = [];
+let buscaAdminProdutos = "";
 
 async function carregarProdutosAdmin(){
   listaProdutosAdmin.innerHTML = "<p class='sem-pedidos'>Carregando produtos...</p>";
@@ -443,6 +444,12 @@ async function carregarProdutosAdmin(){
     pagina++;
   }
 
+    paginaAdminAtual = 1;
+  mostrarPaginaProdutosAdmin();
+}
+
+function pesquisarProdutosAdmin(){
+  buscaAdminProdutos = document.getElementById("pesquisaAdminProdutos").value.trim().toLowerCase();
   paginaAdminAtual = 1;
   mostrarPaginaProdutosAdmin();
 }
@@ -453,15 +460,36 @@ function mostrarPaginaProdutosAdmin(){
     return;
   }
 
-  const totalPaginas = Math.ceil(todosProdutosAdmin.length / produtosPorPaginaAdmin);
-  const inicio = (paginaAdminAtual - 1) * produtosPorPaginaAdmin;
-  const fim = inicio + produtosPorPaginaAdmin;
+  const produtosFiltrados = todosProdutosAdmin.filter(produto => {
 
-  const produtosPagina = todosProdutosAdmin.slice(inicio, fim);
+  if(!buscaAdminProdutos){
+    return true;
+  }
+
+  const codigo = String(produto.codigo || "").toLowerCase();
+  const nome = String(produto.nome || "").toLowerCase();
+  const marca = String(produto.marca || "").toLowerCase();
+  const laboratorio = String(produto.laboratorio || "").toLowerCase();
+
+  return (
+    codigo.includes(buscaAdminProdutos) ||
+    codigo.endsWith(buscaAdminProdutos) ||
+    nome.includes(buscaAdminProdutos) ||
+    marca.includes(buscaAdminProdutos) ||
+    laboratorio.includes(buscaAdminProdutos)
+  );
+});
+
+const totalPaginas = Math.ceil(produtosFiltrados.length / produtosPorPaginaAdmin) || 1;
+
+const inicio = (paginaAdminAtual - 1) * produtosPorPaginaAdmin;
+const fim = inicio + produtosPorPaginaAdmin;
+
+const produtosPagina = produtosFiltrados.slice(inicio, fim);
 
   listaProdutosAdmin.innerHTML = `
     <p class='sem-pedidos'>
-      Total de produtos: <strong>${todosProdutosAdmin.length}</strong><br>
+      Total de produtos encontrados: <strong>${produtosFiltrados.length}</strong><br>
       Página <strong>${paginaAdminAtual}</strong> de <strong>${totalPaginas}</strong>
     </p>
 
