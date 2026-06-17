@@ -2086,4 +2086,78 @@ async function carregarCategoriasNoProduto(){
   });
 }
 
+async function cancelarProdutosPorCodigos(){
+  const campo = document.getElementById("codigosCancelar");
+  const resultado = document.getElementById("resultadoCancelamentoCodigos");
+
+  const codigos = campo.value
+    .split(/\n|,|;/)
+    .map(c => c.trim())
+    .filter(c => c !== "");
+
+  if(codigos.length === 0){
+    alert("Cole pelo menos um código.");
+    return;
+  }
+
+  if(!confirm(`Cancelar ${codigos.length} códigos?`)){
+    return;
+  }
+
+  resultado.innerHTML = "Cancelando produtos...";
+
+  let cancelados = 0;
+  let naoEncontrados = [];
+
+  for(const codigoReduzido of codigos){
+    const { data, error } = await supabaseClient
+      .from("produtos")
+      .select("id,nome,codigo")
+      .ilike("codigo", `%${codigoReduzido}`)
+      .eq("cancelado", false);
+
+    if(error){
+      console.log(error);
+      naoEncontrados.push(codigoReduzido);
+      continue;
+    }
+
+    if(!data || data.length === 0){
+      naoEncontrados.push(codigoReduzido);
+      continue;
+    }
+
+    for(const produto of data){
+      const { error: erroCancelar } = await supabaseClient
+        .from("produtos")
+        .update({
+          cancelado: true,
+          destaque_home: false,
+          promocao: false
+        })
+        .eq("id", produto.id);
+
+      if(!erroCancelar){
+        cancelados++;
+      }
+    }
+  }
+
+  resultado.innerHTML = `
+    <p><strong>Cancelamento concluído!</strong></p>
+    <p>Produtos cancelados: ${cancelados}</p>
+    <p>Códigos não encontrados: ${naoEncontrados.length}</p>
+    ${
+      naoEncontrados.length > 0
+      ? `<p>${naoEncontrados.join(", ")}</p>`
+      : ""
+    }
+  `;
+
+  campo.value = "";
+
+  carregarProdutosAdmin();
+  carregarProdutosSemImagem();
+}
+
 verificarAdmin();

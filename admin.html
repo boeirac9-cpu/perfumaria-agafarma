@@ -137,8 +137,29 @@
     </button>
   </div>
 
-  <h2 class="titulo-admin">Produtos Cadastrados</h2>
-  <div id="listaProdutosAdmin"></div>
+  <h2 class="titulo-admin">Cancelar produtos por código reduzido</h2>
+
+<div class="form-produto">
+  <label>Cole os códigos reduzidos, um por linha</label>
+
+  <textarea
+    id="codigosCancelar"
+    placeholder="Ex:
+8118
+1234
+5678"
+    style="min-height:140px;"
+  ></textarea>
+
+  <button class="botao excluir-produto" onclick="cancelarProdutosPorCodigos()">
+    Cancelar produtos pelos códigos
+  </button>
+
+  <div id="resultadoCancelamentoCodigos" style="margin-top:15px;"></div>
+</div>
+
+<h2 class="titulo-admin">Produtos Cadastrados</h2>
+<div id="listaProdutosAdmin"></div>
 </section>
 <section class="admin-area escondido" id="abaXls">
   <h2 class="titulo-admin">Importar XLS da Trier</h2>
