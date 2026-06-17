@@ -48,6 +48,7 @@ const fim = inicio + quantidadeAtual - 1;
 let consulta = supabaseClient
   .from("produtos")
   .select("*")
+  .eq("cancelado", false)
   .order("id", { ascending: false });
 
 if(paginaAtual === 1 && !buscaAtual){
@@ -357,11 +358,12 @@ async function filtrarCategoria(categoria){
   listaProdutos.innerHTML = "<p class='sem-pedidos'>Carregando categoria...</p>";
 
   const { data, error } = await supabaseClient
-    .from("produtos")
-    .select("*")
-    .eq("categoria", categoria)
-    .order("id", { ascending:false })
-    .range(0, 349);
+  .from("produtos")
+  .select("*")
+  .eq("cancelado", false)
+  .eq("categoria", categoria)
+  .order("id", { ascending:false })
+  .range(0, 349);
 
   if(error){
     console.log(error);

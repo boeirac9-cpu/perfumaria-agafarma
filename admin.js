@@ -418,10 +418,11 @@ async function carregarProdutosAdmin(){
     const fim = inicio + tamanhoPagina - 1;
 
     const { data, error } = await supabaseClient
-      .from("produtos")
-      .select("*")
-      .order("id", { ascending:false })
-      .range(inicio, fim);
+  .from("produtos")
+  .select("*")
+  .eq("cancelado", false)
+  .order("id", { ascending:false })
+  .range(inicio, fim);
 
     if(error){
       console.log(error);
@@ -657,22 +658,26 @@ function converterImagemParaBase64(arquivo){
 }
 
 async function excluirProduto(id){
-  if(!confirm("Deseja excluir este produto?")){
+  if(!confirm("Deseja cancelar este produto? Ele não aparecerá mais no site e não voltará ao importar XLS.")){
     return;
   }
 
   const { error } = await supabaseClient
     .from("produtos")
-    .delete()
+    .update({
+      cancelado: true,
+      destaque_home: false,
+      promocao: false
+    })
     .eq("id", id);
 
   if(error){
     console.log(error);
-    alert("Erro ao excluir produto.");
+    alert("Erro ao cancelar produto.");
     return;
   }
 
-  alert("Produto excluído!");
+  alert("Produto cancelado!");
   carregarProdutosAdmin();
   carregarProdutosSemImagem();
 }
@@ -714,10 +719,11 @@ async function carregarProdutosSemImagem(){
     const fim = inicio + tamanhoPagina - 1;
 
     const { data, error } = await supabaseClient
-      .from("produtos")
-      .select("*")
-      .order("id", { ascending:false })
-      .range(inicio, fim);
+  .from("produtos")
+  .select("*")
+  .eq("cancelado", false)
+  .order("id", { ascending:false })
+  .range(inicio, fim);
 
     if(error){
       console.log(error);
@@ -1306,17 +1312,21 @@ const dadosNovoProduto = {
 };
 
       const { data: produtoExiste, error: erroBusca } = await supabaseClient
-        .from("produtos")
-        .select("id")
-        .eq("codigo", produto.codigo)
-        .maybeSingle();
+  .from("produtos")
+  .select("id,cancelado")
+  .eq("codigo", produto.codigo)
+  .maybeSingle();
 
-      if(erroBusca){
-        console.log(erroBusca);
-        continue;
-      }
+if(erroBusca){
+  console.log(erroBusca);
+  continue;
+}
 
-      if(produtoExiste){
+if(produtoExiste){
+
+  if(produtoExiste.cancelado){
+    continue;
+  }
         const { error } = await supabaseClient
           .from("produtos")
           .update(dadosAtualizacao)
@@ -1334,7 +1344,8 @@ const dadosNovoProduto = {
           .insert([{
   codigo: produto.codigo,
   ...dadosNovoProduto,
-  imagem: "logo.png"
+  imagem: "logo.png",
+  cancelado: false
 }]);
 
         if(!error){
