@@ -1360,19 +1360,43 @@ img{
 }
 
 
-/* BANNER AUTOMÁTICO */
+/* BANNER AUTOMÁTICO SEM CORTAR E SEM ESTICAR */
 
 .banner-slider{
-  width:94%;
-  max-width:1600px;
-  margin:20px auto;
-  border:4px solid #0057b8;
-  border-radius:25px;
-  overflow:hidden;
+  width:94% !important;
+  max-width:1600px !important;
+  margin:20px auto !important;
+  border:4px solid #0057b8 !important;
+  border-radius:25px !important;
+  overflow:hidden !important;
+  background:white !important;
+}
+
+#bannersDinamicos{
+  width:100% !important;
+}
+
+.slide{
+  display:none !important;
+  width:100% !important;
+}
+
+.slide.ativo{
+  display:block !important;
 }
 
 .slide img{
-  width:100%;
-  height:auto;
-  display:block;
+  width:100% !important;
+  height:auto !important;
+  display:block !important;
+  object-fit:unset !important;
+}
+
+@media(max-width:768px){
+  .banner-slider{
+    width:95% !important;
+    margin:18px auto !important;
+    border-radius:18px !important;
+    border:3px solid #0057b8 !important;
+  }
 }
