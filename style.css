@@ -1390,7 +1390,8 @@ img{
 .slide img{
   width:100% !important;
   height:100% !important;
-  object-fit:fill !important;
+  object-fit:cover !important;
+  object-position:center !important;
   display:block !important;
 }
 
