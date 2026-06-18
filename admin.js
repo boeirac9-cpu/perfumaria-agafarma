@@ -2461,12 +2461,14 @@ async function carregarPromocoesAdmin(){
 
           <p><strong>Código:</strong> ${produto.codigo || "Sem código"}</p>
 
-          <p>
-            Preço normal:
-            <strong>
-              R$ ${Number(produto.valor || 0).toFixed(2).replace(".", ",")}
-            </strong>
-          </p>
+          <label>Preço normal</label>
+
+<input
+  type="number"
+  id="promoPreco${produto.id}"
+  value="${produto.valor || 0}"
+  step="0.01"
+>
 
           <label>Tipo de desconto</label>
           <select id="promoTipo${produto.id}">
@@ -2509,13 +2511,16 @@ async function salvarPromocaoProduto(id){
 
   const tipo = document.getElementById(`promoTipo${id}`).value;
   const valor = Number(document.getElementById(`promoValor${id}`).value || 0);
+  const preco =
+Number(document.getElementById(`promoPreco${id}`).value || 0);
 
   const { error } = await supabaseClient
     .from("produtos")
     .update({
-      desconto_tipo: tipo || null,
-      desconto_valor: valor
-    })
+  valor: preco,
+  desconto_tipo: tipo || null,
+  desconto_valor: valor
+})
     .eq("id", id);
 
   if(error){
