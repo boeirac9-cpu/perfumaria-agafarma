@@ -82,8 +82,13 @@ function mostrarAba(aba){
   document.getElementById("abaPedidos").classList.add("escondido");
   document.getElementById("abaProdutos").classList.add("escondido");
   document.getElementById("abaCupons").classList.add("escondido");
+  document.getElementById("abaControlados").classList.add("escondido");
 
   const abaCategorias = document.getElementById("abaCategorias");
+
+  if (aba === "controlados") {
+  document.getElementById("abaControlados").classList.remove("escondido");
+}
 
 if(abaCategorias){
   abaCategorias.classList.add("escondido");
@@ -2561,7 +2566,10 @@ async function marcarControlados() {
 
   const { error } = await supabaseClient
     .from("produtos")
-    .update({ controlado: true })
+    .update({
+  medicamento_controlado: true,
+  exige_receita: true
+})
     .in("codigo", codigos);
 
   if (error) {
