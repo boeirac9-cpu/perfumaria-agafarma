@@ -2414,22 +2414,29 @@ async function cancelarProdutosPorCodigos(){
 }
 
 async function carregarPromocoesAdmin(){
-
   const lista = document.getElementById("listaPromocoesAdmin");
+  const pesquisa = document.getElementById("pesquisaPromocao")?.value.trim();
 
-  if(!lista){
+  if(!lista) return;
+
+  if(!pesquisa){
+    lista.innerHTML = `
+      <p class="sem-pedidos">
+        Digite o nome ou código do produto para colocar em promoção.
+      </p>
+    `;
     return;
   }
 
-  const pesquisa = (
-    document.getElementById("pesquisaPromocao")?.value || ""
-  ).toLowerCase();
+  lista.innerHTML = "<p class='sem-pedidos'>Buscando produtos...</p>";
 
   const { data, error } = await supabaseClient
     .from("produtos")
     .select("*")
     .eq("cancelado", false)
-    .order("nome");
+    .or(`nome.ilike.%${pesquisa}%,marca.ilike.%${pesquisa}%,laboratorio.ilike.%${pesquisa}%,codigo.ilike.%${pesquisa}%`)
+    .order("nome")
+    .limit(30);
 
   if(error){
     console.log(error);
@@ -2437,63 +2444,52 @@ async function carregarPromocoesAdmin(){
     return;
   }
 
-  const produtosFiltrados = (data || []).filter(produto => {
-
-    if(!pesquisa){
-      return true;
-    }
-
-    return (
-      String(produto.nome || "").toLowerCase().includes(pesquisa) ||
-      String(produto.marca || "").toLowerCase().includes(pesquisa) ||
-      String(produto.codigo || "").toLowerCase().includes(pesquisa)
-    );
-  });
+  if(!data || data.length === 0){
+    lista.innerHTML = "<p class='sem-pedidos'>Nenhum produto encontrado.</p>";
+    return;
+  }
 
   lista.innerHTML = "";
 
-  produtosFiltrados.forEach(produto => {
-
+  data.forEach(produto => {
     lista.innerHTML += `
       <div class="produto-admin">
-
         <img src="${produto.imagem || 'logo.png'}">
 
         <div class="produto-admin-info">
-
           <h3>${produto.nome}</h3>
 
+          <p><strong>Código:</strong> ${produto.codigo || "Sem código"}</p>
+
           <p>
-            Valor atual:
+            Preço normal:
             <strong>
               R$ ${Number(produto.valor || 0).toFixed(2).replace(".", ",")}
             </strong>
           </p>
 
+          <label>Tipo de desconto</label>
           <select id="promoTipo${produto.id}">
-            <option value=""
-              ${!produto.desconto_tipo ? "selected" : ""}>
+            <option value="" ${!produto.desconto_tipo ? "selected" : ""}>
               Sem desconto
             </option>
 
-            <option value="porcentagem"
-              ${produto.desconto_tipo === "porcentagem" ? "selected" : ""}>
+            <option value="porcentagem" ${produto.desconto_tipo === "porcentagem" ? "selected" : ""}>
               Porcentagem (%)
             </option>
 
-            <option value="reais"
-              ${produto.desconto_tipo === "reais" ? "selected" : ""}>
+            <option value="reais" ${produto.desconto_tipo === "reais" ? "selected" : ""}>
               Valor em R$
             </option>
           </select>
 
+          <label>Valor do desconto</label>
           <input
             type="number"
             id="promoValor${produto.id}"
             value="${produto.desconto_valor || 0}"
             step="0.01"
-            placeholder="Valor desconto"
-            style="margin-top:8px;"
+            placeholder="Ex: 20 ou 10.00"
           >
 
           <button
@@ -2503,13 +2499,10 @@ async function carregarPromocoesAdmin(){
           >
             Salvar Promoção
           </button>
-
         </div>
-
       </div>
     `;
   });
-
 }
 
 async function salvarPromocaoProduto(id){
