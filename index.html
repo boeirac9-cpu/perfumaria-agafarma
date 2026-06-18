@@ -220,11 +220,25 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 
     <label>Observações</label>
-    <textarea id="observacoes" placeholder="Alguma observação sobre o pedido?"></textarea>
+<textarea id="observacoes" placeholder="Alguma observação sobre o pedido?"></textarea>
 
-    <button class="botao confirmar" onclick="enviarPedido()">
-      Confirmar Pedido
-    </button>
+<div id="areaReceitaControlado" style="display:none; margin-top:15px;">
+  <label>Foto da receita médica</label>
+
+  <input
+    type="file"
+    id="fotoReceita"
+    accept="image/*"
+  >
+
+  <p style="font-size:13px;color:#d62828;margin-top:8px;">
+    Este pedido possui medicamento controlado. Envie a foto da receita antes de finalizar.
+  </p>
+</div>
+
+<button class="botao confirmar" onclick="enviarPedido()">
+  Confirmar Pedido
+</button>
   </div>
 </div>
 

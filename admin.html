@@ -125,7 +125,13 @@
       <option value="skincare">Skincare</option>
       <option value="maquiagem">Maquiagem</option>
       <option value="promocao">Promoção</option>
+      <option value="medicamentos">Medicamentos</option>
     </select>
+
+    <label style="margin-top:15px;">
+  <input type="checkbox" id="produtoControlado">
+  Medicamento controlado / exige receita
+</label>
 
     <label>Imagem do produto</label>
     <input type="file" id="produtoImagem" accept="image/*">
@@ -177,6 +183,9 @@
   <h2 class="titulo-admin">Importar XLS da Trier</h2>
 
   <div class="form-produto">
+
+    <h3>Perfumaria</h3>
+
     <label>XLS 0014 - Estoque / Produtos</label>
     <input type="file" id="xlsEstoque" accept=".xls,.xlsx">
 
@@ -187,7 +196,22 @@
       Importar e atualizar catálogo
     </button>
 
+    <hr style="margin:25px 0;">
+
+    <h3>Medicamentos</h3>
+
+    <label>XLS 0014 - Medicamentos</label>
+    <input type="file" id="xlsEstoqueMedicamentos" accept=".xls,.xlsx">
+
+    <label>XLS 0003 - Preços Medicamentos</label>
+    <input type="file" id="xlsPrecosMedicamentos" accept=".xls,.xlsx">
+
+    <button class="botao confirmar" onclick="importarXLSMedicamentos()">
+      Importar e atualizar medicamentos
+    </button>
+
     <div id="resultadoImportacao" style="margin-top:15px;"></div>
+
   </div>
 </section>
 

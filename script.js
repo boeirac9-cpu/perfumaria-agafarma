@@ -92,10 +92,29 @@ const { data, error } = await consulta.range(inicio, fim);
 
       <div class="info">
         <span class="categoria">
-          ${produto.promocao ? "🔥 Promoção" : produto.categoria}
-        </span>
+  ${produto.promocao ? "🔥 Promoção" : produto.categoria}
+</span>
 
-        <h2>${produto.nome}</h2>
+${
+  produto.medicamento_controlado
+  ? `
+    <div style="
+      background:#d62828;
+      color:#fff;
+      padding:6px 10px;
+      border-radius:8px;
+      margin:8px 0;
+      font-size:12px;
+      font-weight:bold;
+      text-align:center;
+    ">
+      CONTROLADO • EXIGE RECEITA
+    </div>
+  `
+  : ""
+}
+
+<h2>${produto.nome}</h2>
 
         <p>Marca: ${produto.marca || "Não informado"}</p>
         <p>Laboratório: ${produto.laboratorio || "Não informado"}</p>
@@ -266,7 +285,9 @@ function adicionarCarrinho(id){
   codigo: produto.codigo || "",
   nome: produto.nome,
   preco: calcularPrecoFinal(produto),
-  quantidade: 1
+  quantidade: 1,
+  medicamento_controlado: produto.medicamento_controlado || false,
+  exige_receita: produto.exige_receita || false
 });
   }
 
@@ -603,6 +624,14 @@ if(carrinhoMobile){
     return;
   }
 
+  const temControlado = carrinho.some(item => item.medicamento_controlado);
+
+const areaReceita = document.getElementById("areaReceitaControlado");
+
+if(areaReceita){
+  areaReceita.style.display = temControlado ? "block" : "none";
+}
+
   document.getElementById("modalFinalizacao").classList.add("ativo");
 
   const celular = document.getElementById("celular");
@@ -780,12 +809,61 @@ async function gerarPixPedido(valor, nomeCliente, pedidoId){
   return pix;
 }
 
+async function enviarReceitaControlado(){
+  const input = document.getElementById("fotoReceita");
+
+  if(!input || !input.files || input.files.length === 0){
+    return null;
+  }
+
+  const arquivo = input.files[0];
+
+  const nomeArquivo = `receita-${Date.now()}-${arquivo.name}`;
+
+  const { error } = await supabaseClient
+    .storage
+    .from("receitas")
+    .upload(nomeArquivo, arquivo);
+
+  if(error){
+    console.log(error);
+    throw new Error("Erro ao enviar foto da receita.");
+  }
+
+  const { data } = supabaseClient
+    .storage
+    .from("receitas")
+    .getPublicUrl(nomeArquivo);
+
+  return data.publicUrl;
+}
+
 async function enviarPedido(){
   if(!clienteLogado){
     alert("Faça login antes de finalizar.");
     abrirLogin();
     return;
   }
+
+  const temControlado = carrinho.some(item => item.medicamento_controlado);
+
+let receitaUrl = null;
+
+if(temControlado){
+  const inputReceita = document.getElementById("fotoReceita");
+
+  if(!inputReceita || !inputReceita.files || inputReceita.files.length === 0){
+    alert("Este pedido possui medicamento controlado. Envie a foto da receita antes de finalizar.");
+    return;
+  }
+
+  try{
+    receitaUrl = await enviarReceitaControlado();
+  }catch(erro){
+    alert("Erro ao enviar a receita. Tente novamente.");
+    return;
+  }
+}
 
   const nomeCliente = document.getElementById("nomeCliente").value;
   const tipoEntrega = document.getElementById("tipoEntrega").value;
@@ -855,6 +933,8 @@ if(tipoEntrega === "tele"){
       total: Number(totalFinal.toFixed(2)),
       status: ehPix ? "Aguardando pagamento PIX" : "Novo pedido",
 cupom: cupomAtual ? cupomAtual.codigo : null,
+receita_url: receitaUrl,
+possui_controlado: temControlado,
 pix_txid: null,
 pix_pago: false,
 estoque_baixado: false,

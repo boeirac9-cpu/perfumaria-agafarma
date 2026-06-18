@@ -225,6 +225,43 @@ async function carregarPedidos(){
       <p><strong>Pagamento:</strong> ${pedido.pagamento}</p>
       <p><strong>Status:</strong> ${pedido.status}</p>
 
+      ${
+  pedido.possui_controlado
+  ? `
+    <p style="
+      background:#d62828;
+      color:white;
+      padding:8px;
+      border-radius:8px;
+      font-weight:bold;
+    ">
+      💊 CONTÉM MEDICAMENTO CONTROLADO
+    </p>
+  `
+  : ""
+}
+
+${
+  pedido.receita_url
+  ? `
+    <a
+      href="${pedido.receita_url}"
+      target="_blank"
+      class="botao"
+      style="
+        display:inline-block;
+        margin-top:10px;
+        background:#198754;
+        color:white;
+        text-decoration:none;
+      "
+    >
+      📄 Ver Receita
+    </a>
+  `
+  : ""
+}
+
       ${pedido.cupom ? `<p><strong>Cupom:</strong> ${pedido.cupom}</p>` : ""}
 
       <ul>${produtosHTML}</ul>
@@ -351,6 +388,9 @@ async function salvarProduto(){
   const categoria = document.getElementById("produtoCategoria").value;
   const imagem = document.getElementById("previewImagem").src;
 
+  const controlado = document.getElementById("produtoControlado").checked;
+  const tipoProduto = categoria === "medicamentos" ? "medicamento" : "perfumaria";
+
   if(nome.trim() === "" || valor.trim() === "" || quantidade.trim() === ""){
     alert("Preencha nome, valor e quantidade.");
     return;
@@ -362,11 +402,14 @@ async function salvarProduto(){
     marca,
     laboratorio,
     descricao,
-    valor:Number(valor),
-    desconto:Number(desconto) || 0,
-    quantidade:Number(quantidade),
+    valor: Number(valor),
+    desconto: Number(desconto) || 0,
+    quantidade: Number(quantidade),
     categoria,
-    imagem: imagem || "logo.png"
+    imagem: imagem || "logo.png",
+    tipo_produto: tipoProduto,
+    medicamento_controlado: controlado,
+    exige_receita: controlado
   };
 
   let error;
@@ -380,6 +423,7 @@ async function salvarProduto(){
     error = resposta.error;
   } else {
     produto.promocao = false;
+    produto.cancelado = false;
 
     const resposta = await supabaseClient
       .from("produtos")
@@ -1055,6 +1099,8 @@ function limparFormulario(){
   document.getElementById("produtoQuantidade").value = "";
   document.getElementById("produtoImagem").value = "";
   document.getElementById("previewImagem").src = "";
+
+  document.getElementById("produtoControlado").checked = false;
 }
 /* IMPORTAR XLS 0014 + 0003 */
 
@@ -1408,6 +1454,138 @@ if(produtoExiste){
     console.log(erro);
     resultado.innerHTML = `
       <p><strong>Erro ao importar XLS.</strong></p>
+      <p>${erro.message || erro}</p>
+    `;
+  }
+}
+
+async function importarXLSMedicamentos(){
+  const arquivoEstoque = document.getElementById("xlsEstoqueMedicamentos").files[0];
+  const arquivoPrecos = document.getElementById("xlsPrecosMedicamentos").files[0];
+  const resultado = document.getElementById("resultadoImportacao");
+
+  if(!arquivoEstoque || !arquivoPrecos){
+    alert("Selecione o XLS 0014 e o XLS 0003 dos medicamentos.");
+    return;
+  }
+
+  resultado.innerHTML = "<p>Lendo arquivos de medicamentos...</p>";
+
+  try{
+    const linhasEstoque = await lerArquivoXLS(arquivoEstoque);
+    const linhasPrecos = await lerArquivoXLS(arquivoPrecos);
+
+    const produtosEstoque = extrairProdutosEstoque0014(linhasEstoque);
+    const mapaPrecos = extrairPrecos0003(linhasPrecos);
+
+    let comPreco = 0;
+    let semPreco = 0;
+    let atualizados = 0;
+    let inseridos = 0;
+
+    resultado.innerHTML = `<p>Atualizando ${produtosEstoque.length} medicamentos...</p>`;
+
+    for(const produto of produtosEstoque){
+      const precoEncontrado = mapaPrecos[produto.codigo] || 0;
+
+      if(precoEncontrado > 0){
+        comPreco++;
+      } else {
+        semPreco++;
+      }
+
+      const dadosAtualizacao = {
+        quantidade: produto.quantidade,
+        valor: precoEncontrado > 0 ? precoEncontrado : 0,
+        tipo_produto: "medicamento",
+        categoria: "medicamentos"
+      };
+
+      const dadosNovoProduto = {
+        nome: produto.nome,
+        laboratorio: produto.laboratorio,
+        marca: produto.marca,
+        quantidade: produto.quantidade,
+        valor: precoEncontrado > 0 ? precoEncontrado : 0,
+        desconto: 0,
+        descricao: "",
+        categoria: "medicamentos",
+        promocao: false,
+        tipo_produto: "medicamento",
+        medicamento_controlado: false,
+        exige_receita: false
+      };
+
+      const { data: produtoExiste, error: erroBusca } = await supabaseClient
+        .from("produtos")
+        .select("id,cancelado")
+        .eq("codigo", produto.codigo)
+        .maybeSingle();
+
+      if(erroBusca){
+        console.log(erroBusca);
+        continue;
+      }
+
+      if(produtoExiste){
+
+        if(produtoExiste.cancelado){
+          continue;
+        }
+
+        const { error } = await supabaseClient
+          .from("produtos")
+          .update(dadosAtualizacao)
+          .eq("codigo", produto.codigo);
+
+        if(!error){
+          atualizados++;
+        } else {
+          console.log(error);
+        }
+
+      } else {
+        const { error } = await supabaseClient
+          .from("produtos")
+          .insert([{
+            codigo: produto.codigo,
+            ...dadosNovoProduto,
+            imagem: "logo.png",
+            cancelado: false
+          }]);
+
+        if(!error){
+          inseridos++;
+        } else {
+          console.log(error);
+        }
+      }
+
+      resultado.innerHTML = `
+        <p>Processando medicamentos...</p>
+        <p>Atualizados: ${atualizados}</p>
+        <p>Inseridos novos: ${inseridos}</p>
+      `;
+
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+
+    resultado.innerHTML = `
+      <p><strong>Importação de medicamentos concluída!</strong></p>
+      <p>Produtos do 0014: ${produtosEstoque.length}</p>
+      <p>Com preço encontrado no 0003: ${comPreco}</p>
+      <p>Sem preço: ${semPreco}</p>
+      <p>Medicamentos atualizados: ${atualizados}</p>
+      <p>Medicamentos novos inseridos: ${inseridos}</p>
+    `;
+
+    carregarProdutosAdmin();
+    carregarProdutosSemImagem();
+
+  }catch(erro){
+    console.log(erro);
+    resultado.innerHTML = `
+      <p><strong>Erro ao importar medicamentos.</strong></p>
       <p>${erro.message || erro}</p>
     `;
   }
