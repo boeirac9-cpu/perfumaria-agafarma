@@ -565,6 +565,17 @@ const produtosPagina = produtosFiltrados.slice(inicio, fim);
 <p><strong>Estoque:</strong> ${produto.quantidade}</p>
 <p><strong>Valor:</strong> R$ ${Number(produto.valor).toFixed(2).replace(".", ",")}</p>
 
+<p>
+  <label>
+    <input
+      type="checkbox"
+      id="editControlado${produto.id}"
+      ${produto.medicamento_controlado ? "checked" : ""}
+    >
+    Medicamento controlado / exige receita
+  </label>
+</p>
+
 <div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:10px;">
   <input
     id="editNome${produto.id}"
@@ -684,6 +695,7 @@ async function salvarTodosProdutosPagina(){
   for(const produto of produtosPagina){
     const nome = document.getElementById(`editNome${produto.id}`).value.trim();
     const categoria = document.getElementById(`editCategoria${produto.id}`).value;
+    const controlado = document.getElementById(`editControlado${produto.id}`).checked;
     const arquivoImagem = document.getElementById(`editImagem${produto.id}`).files[0];
 
     if(nome === ""){
@@ -692,9 +704,11 @@ async function salvarTodosProdutosPagina(){
     }
 
     const dadosAtualizacao = {
-      nome,
-      categoria
-    };
+  nome,
+  categoria,
+  medicamento_controlado: controlado,
+  exige_receita: controlado
+};
 
     if(arquivoImagem){
       dadosAtualizacao.imagem = await converterImagemParaBase64(arquivoImagem);
