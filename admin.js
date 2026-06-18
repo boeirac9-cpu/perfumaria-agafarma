@@ -93,11 +93,13 @@ if(abaCategorias){
   const abaVideos = document.getElementById("abaVideos");
   const abaXls = document.getElementById("abaXls");
   const abaImagens = document.getElementById("abaImagens");
+  const abaPromocoes = document.getElementById("abaPromocoes");
 
   if(abaBanners) abaBanners.classList.add("escondido");
   if(abaVideos) abaVideos.classList.add("escondido");
   if(abaXls) abaXls.classList.add("escondido");
   if(abaImagens) abaImagens.classList.add("escondido");
+  if(abaPromocoes) abaPromocoes.classList.add("escondido");
 
   if(aba === "pedidos"){
     document.getElementById("abaPedidos").classList.remove("escondido");
@@ -137,6 +139,11 @@ if(abaCategorias){
     abaImagens.classList.remove("escondido");
     carregarProdutosSemImagem();
   }
+}
+
+if(aba === "promocoes" && abaPromocoes){
+  abaPromocoes.classList.remove("escondido");
+  carregarPromocoesAdmin();
 }
 
 /* CÓDIGO DE BARRAS */
@@ -2402,6 +2409,128 @@ async function cancelarProdutosPorCodigos(){
 
   carregarProdutosAdmin();
   carregarProdutosSemImagem();
+}
+
+async function carregarPromocoesAdmin(){
+
+  const lista = document.getElementById("listaPromocoesAdmin");
+
+  if(!lista){
+    return;
+  }
+
+  const pesquisa = (
+    document.getElementById("pesquisaPromocao")?.value || ""
+  ).toLowerCase();
+
+  const { data, error } = await supabaseClient
+    .from("produtos")
+    .select("*")
+    .eq("cancelado", false)
+    .order("nome");
+
+  if(error){
+    console.log(error);
+    lista.innerHTML = "Erro ao carregar produtos.";
+    return;
+  }
+
+  const produtosFiltrados = (data || []).filter(produto => {
+
+    if(!pesquisa){
+      return true;
+    }
+
+    return (
+      String(produto.nome || "").toLowerCase().includes(pesquisa) ||
+      String(produto.marca || "").toLowerCase().includes(pesquisa) ||
+      String(produto.codigo || "").toLowerCase().includes(pesquisa)
+    );
+  });
+
+  lista.innerHTML = "";
+
+  produtosFiltrados.forEach(produto => {
+
+    lista.innerHTML += `
+      <div class="produto-admin">
+
+        <img src="${produto.imagem || 'logo.png'}">
+
+        <div class="produto-admin-info">
+
+          <h3>${produto.nome}</h3>
+
+          <p>
+            Valor atual:
+            <strong>
+              R$ ${Number(produto.valor || 0).toFixed(2).replace(".", ",")}
+            </strong>
+          </p>
+
+          <select id="promoTipo${produto.id}">
+            <option value=""
+              ${!produto.desconto_tipo ? "selected" : ""}>
+              Sem desconto
+            </option>
+
+            <option value="porcentagem"
+              ${produto.desconto_tipo === "porcentagem" ? "selected" : ""}>
+              Porcentagem (%)
+            </option>
+
+            <option value="reais"
+              ${produto.desconto_tipo === "reais" ? "selected" : ""}>
+              Valor em R$
+            </option>
+          </select>
+
+          <input
+            type="number"
+            id="promoValor${produto.id}"
+            value="${produto.desconto_valor || 0}"
+            step="0.01"
+            placeholder="Valor desconto"
+            style="margin-top:8px;"
+          >
+
+          <button
+            class="botao confirmar"
+            style="margin-top:10px;"
+            onclick="salvarPromocaoProduto(${produto.id})"
+          >
+            Salvar Promoção
+          </button>
+
+        </div>
+
+      </div>
+    `;
+  });
+
+}
+
+async function salvarPromocaoProduto(id){
+
+  const tipo = document.getElementById(`promoTipo${id}`).value;
+  const valor = Number(document.getElementById(`promoValor${id}`).value || 0);
+
+  const { error } = await supabaseClient
+    .from("produtos")
+    .update({
+      desconto_tipo: tipo || null,
+      desconto_valor: valor
+    })
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao salvar promoção.");
+    return;
+  }
+
+  alert("Promoção salva!");
+  carregarPromocoesAdmin();
 }
 
 verificarAdmin();

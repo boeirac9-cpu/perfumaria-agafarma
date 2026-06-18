@@ -52,6 +52,7 @@
   <button onclick="mostrarAba('banners')">Banners / Folders</button>
   <button onclick="mostrarAba('videos')">Vídeos Home</button>
   <button onclick="mostrarAba('imagens')">Produtos sem imagem</button>
+  <button onclick="mostrarAba('promocoes')">🔥 Promoções</button>
 </section>
 
 <section class="admin-area" id="abaPedidos">
@@ -293,6 +294,23 @@
   </div>
 
   <div id="listaVideosAdmin"></div>
+</section>
+
+<section class="admin-area escondido" id="abaPromocoes">
+  <h2 class="titulo-admin">Colocar produto em promoção</h2>
+
+  <div class="form-produto">
+    <label>Pesquisar produto</label>
+
+    <input
+      type="text"
+      id="pesquisaPromocao"
+      placeholder="Digite nome, marca, laboratório ou código"
+      onkeyup="carregarPromocoesAdmin()"
+    >
+  </div>
+
+  <div id="listaPromocoesAdmin"></div>
 </section>
 
 <section class="admin-area escondido" id="abaImagens">
