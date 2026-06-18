@@ -1318,7 +1318,7 @@ function extrairPrecos0003(linhas){
       return;
     }
 
-    const preco = dinheiroParaNumero(linha[12]);
+    const preco = dinheiroParaNumero(linha[14]);
 
     if(preco <= 0){
       return;
