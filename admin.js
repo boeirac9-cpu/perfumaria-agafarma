@@ -2470,6 +2470,15 @@ async function carregarPromocoesAdmin(){
   step="0.01"
 >
 
+<label style="display:block;margin-top:10px;">
+  <input
+    type="checkbox"
+    id="promoControlado${produto.id}"
+    ${produto.medicamento_controlado ? "checked" : ""}
+  >
+  Medicamento controlado / exige receita
+</label>
+
           <label>Tipo de desconto</label>
           <select id="promoTipo${produto.id}">
             <option value="" ${!produto.desconto_tipo ? "selected" : ""}>
@@ -2511,15 +2520,19 @@ async function salvarPromocaoProduto(id){
 
   const tipo = document.getElementById(`promoTipo${id}`).value;
   const valor = Number(document.getElementById(`promoValor${id}`).value || 0);
-  const preco =
-Number(document.getElementById(`promoPreco${id}`).value || 0);
+  const preco = 
+  Number(document.getElementById(`promoPreco${id}`).value || 0);
+  const controlado =
+  document.getElementById(`promoControlado${id}`).checked;
 
   const { error } = await supabaseClient
     .from("produtos")
     .update({
   valor: preco,
   desconto_tipo: tipo || null,
-  desconto_valor: valor
+  desconto_valor: valor,
+  medicamento_controlado: controlado,
+  exige_receita: controlado
 })
     .eq("id", id);
 
