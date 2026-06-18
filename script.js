@@ -262,11 +262,12 @@ function adicionarCarrinho(id){
     produtoExistente.quantidade++;
   } else {
     carrinho.push({
-      id: produto.id,
-      nome: produto.nome,
-      preco: calcularPrecoFinal(produto),
-      quantidade: 1
-    });
+  id: produto.id,
+  codigo: produto.codigo || "",
+  nome: produto.nome,
+  preco: calcularPrecoFinal(produto),
+  quantidade: 1
+});
   }
 
   atualizarCarrinho();
