@@ -226,10 +226,11 @@ OneSignalDeferred.push(async function(OneSignal) {
   <label>Foto da receita médica</label>
 
   <input
-    type="file"
-    id="fotoReceita"
-    accept="image/*"
-  >
+  type="file"
+  id="fotoReceita"
+  accept="image/*"
+  capture="environment"
+>
 
   <p style="font-size:13px;color:#d62828;margin-top:8px;">
     Este pedido possui medicamento controlado. Envie a foto da receita antes de finalizar.
