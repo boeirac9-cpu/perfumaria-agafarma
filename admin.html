@@ -53,6 +53,9 @@
   <button onclick="mostrarAba('videos')">Vídeos Home</button>
   <button onclick="mostrarAba('imagens')">Produtos sem imagem</button>
   <button onclick="mostrarAba('promocoes')">🔥 Promoções</button>
+  <button onclick="mostrarAba('controlados')">
+💊 Controlados
+</button>
 </section>
 
 <section class="admin-area" id="abaPedidos">
@@ -331,6 +334,40 @@
 <div id="statusBuscaTodasImagens" style="margin-top:15px;"></div>
 
 <div id="listaProdutosSemImagem"></div>
+</section>
+
+<section class="admin-area escondido" id="abaControlados">
+
+  <h2 class="titulo-admin">
+    Marcar Produtos Controlados
+  </h2>
+
+  <div class="form-produto">
+
+    <label>
+      Cole os códigos reduzidos (um por linha)
+    </label>
+
+    <textarea
+      id="listaControlados"
+      style="min-height:200px;"
+      placeholder="756
+755
+758
+762">
+    </textarea>
+
+    <button
+      class="botao confirmar"
+      onclick="marcarControlados()"
+    >
+      Marcar como Controlado
+    </button>
+
+    <div id="resultadoControlados"></div>
+
+  </div>
+
 </section>
 
 </div>

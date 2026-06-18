@@ -2546,4 +2546,33 @@ async function salvarPromocaoProduto(id){
   carregarPromocoesAdmin();
 }
 
+async function marcarControlados() {
+  const texto = document.getElementById("listaControlados").value;
+
+  const codigos = texto
+    .split(/\n|,|;/)
+    .map(c => c.trim())
+    .filter(c => c !== "");
+
+  if (codigos.length === 0) {
+    alert("Cole pelo menos um código reduzido.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("produtos")
+    .update({ controlado: true })
+    .in("codigo", codigos);
+
+  if (error) {
+    alert("Erro ao marcar controlados: " + error.message);
+    return;
+  }
+
+  document.getElementById("resultadoControlados").innerHTML =
+    `✅ ${codigos.length} códigos enviados para marcar como controlado.`;
+
+  alert("Produtos marcados como controlados!");
+}
+
 verificarAdmin();
