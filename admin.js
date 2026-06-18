@@ -139,12 +139,14 @@ if(abaCategorias){
     abaImagens.classList.remove("escondido");
     carregarProdutosSemImagem();
   }
-}
 
-if(aba === "promocoes" && abaPromocoes){
+  if(aba === "promocoes" && abaPromocoes){
   abaPromocoes.classList.remove("escondido");
   carregarPromocoesAdmin();
 }
+
+}
+  
 
 /* CÓDIGO DE BARRAS */
 
