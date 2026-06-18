@@ -383,7 +383,8 @@ async function salvarProduto(){
   const laboratorio = document.getElementById("produtoLaboratorio").value;
   const descricao = document.getElementById("produtoDescricao").value;
   const valor = document.getElementById("produtoValor").value;
-  const desconto = document.getElementById("produtoDesconto").value;
+  const descontoTipo = document.getElementById("produtoDescontoTipo").value;
+const descontoValor = document.getElementById("produtoDescontoValor").value;
   const quantidade = document.getElementById("produtoQuantidade").value;
   const categoria = document.getElementById("produtoCategoria").value;
   const imagem = document.getElementById("previewImagem").src;
@@ -403,7 +404,8 @@ async function salvarProduto(){
     laboratorio,
     descricao,
     valor: Number(valor),
-    desconto: Number(desconto) || 0,
+    desconto_tipo: descontoTipo || null,
+desconto_valor: Number(descontoValor) || 0,
     quantidade: Number(quantidade),
     categoria,
     imagem: imagem || "logo.png",
@@ -1128,7 +1130,8 @@ function limparFormulario(){
   document.getElementById("produtoLaboratorio").value = "";
   document.getElementById("produtoDescricao").value = "";
   document.getElementById("produtoValor").value = "";
-  document.getElementById("produtoDesconto").value = "";
+  document.getElementById("produtoDescontoTipo").value = "";
+document.getElementById("produtoDescontoValor").value = "";
   document.getElementById("produtoQuantidade").value = "";
   document.getElementById("produtoImagem").value = "";
   document.getElementById("previewImagem").src = "";
@@ -1412,7 +1415,8 @@ const dadosNovoProduto = {
   marca: produto.marca,
   quantidade: produto.quantidade,
   valor: precoEncontrado > 0 ? precoEncontrado : 0,
-  desconto: 0,
+  desconto_tipo: null,
+desconto_valor: 0,
   descricao: "",
   categoria: produto.categoria || "higiene",
   promocao: false
@@ -1540,7 +1544,8 @@ async function importarXLSMedicamentos(){
         marca: produto.marca,
         quantidade: produto.quantidade,
         valor: precoEncontrado > 0 ? precoEncontrado : 0,
-        desconto: 0,
+        desconto_tipo: null,
+desconto_valor: 0,
         descricao: "",
         categoria: "medicamentos",
         promocao: false,

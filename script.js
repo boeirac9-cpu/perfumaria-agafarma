@@ -23,11 +23,21 @@ function atualizarBotaoLogin(){
 }
 
 function calcularPrecoFinal(produto){
-  const valor = Number(produto.valor);
-  const desconto = Number(produto.desconto) || 0;
+  const valor = Number(produto.valor || 0);
 
-  if(produto.promocao && desconto > 0){
+  const tipo = produto.desconto_tipo;
+  const desconto = Number(produto.desconto_valor || 0);
+
+  if(!tipo || desconto <= 0){
+    return valor;
+  }
+
+  if(tipo === "porcentagem"){
     return valor - (valor * desconto / 100);
+  }
+
+  if(tipo === "reais"){
+    return Math.max(0, valor - desconto);
   }
 
   return valor;
@@ -79,7 +89,8 @@ const { data, error } = await consulta.range(inicio, fim);
 
   produtos.forEach(produto => {
     const precoFinal = calcularPrecoFinal(produto);
-    const desconto = Number(produto.desconto) || 0;
+    const desconto = Number(produto.desconto_valor) || 0;
+const tipoDesconto = produto.desconto_tipo;
 
     const card = document.createElement("div");
     card.classList.add("card");
@@ -122,7 +133,7 @@ ${
         <p>Estoque: ${produto.quantidade}</p>
 
         ${
-          produto.promocao && desconto > 0
+          desconto > 0
           ? `
             <div class="preco-antigo">
               R$ ${Number(produto.valor).toFixed(2).replace(".", ",")}
@@ -133,8 +144,12 @@ ${
             </div>
 
             <p class="desconto-produto">
-              ${desconto}% OFF
-            </p>
+  ${
+    tipoDesconto === "porcentagem"
+      ? `${desconto}% OFF`
+      : `R$ ${desconto.toFixed(2).replace(".", ",")} OFF`
+  }
+</p>
           `
           : `
             <div class="preco">
@@ -404,7 +419,8 @@ async function filtrarCategoria(categoria){
 
   produtos.forEach(produto => {
     const precoFinal = calcularPrecoFinal(produto);
-    const desconto = Number(produto.desconto) || 0;
+    const desconto = Number(produto.desconto_valor) || 0;
+const tipoDesconto = produto.desconto_tipo;
 
     const card = document.createElement("div");
     card.classList.add("card");
@@ -425,7 +441,7 @@ async function filtrarCategoria(categoria){
         <p>Estoque: ${produto.quantidade}</p>
 
         ${
-          produto.promocao && desconto > 0
+          desconto > 0
           ? `
             <div class="preco-antigo">
               R$ ${Number(produto.valor).toFixed(2).replace(".", ",")}
