@@ -1418,7 +1418,7 @@ if(produtoExiste){
           .insert([{
   codigo: produto.codigo,
   ...dadosNovoProduto,
-  imagem: "logo.png",
+  imagem: "medicamento-agafarma.png",
   cancelado: false
 }]);
 
@@ -1550,8 +1550,8 @@ async function importarXLSMedicamentos(){
           .insert([{
             codigo: produto.codigo,
             ...dadosNovoProduto,
-            imagem: "logo.png",
-            cancelado: false
+            imagem: "medicamento-agafarma.png",
+cancelado: false
           }]);
 
         if(!error){
