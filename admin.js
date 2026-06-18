@@ -683,7 +683,26 @@ function proximaPaginaAdmin(){
 async function salvarTodosProdutosPagina(){
   const inicio = (paginaAdminAtual - 1) * produtosPorPaginaAdmin;
   const fim = inicio + produtosPorPaginaAdmin;
-  const produtosPagina = todosProdutosAdmin.slice(inicio, fim);
+  const produtosFiltrados = todosProdutosAdmin.filter(produto => {
+  if(!buscaAdminProdutos){
+    return true;
+  }
+
+  const codigo = String(produto.codigo || "").toLowerCase();
+  const nome = String(produto.nome || "").toLowerCase();
+  const marca = String(produto.marca || "").toLowerCase();
+  const laboratorio = String(produto.laboratorio || "").toLowerCase();
+
+  return (
+    codigo.includes(buscaAdminProdutos) ||
+    codigo.endsWith(buscaAdminProdutos) ||
+    nome.includes(buscaAdminProdutos) ||
+    marca.includes(buscaAdminProdutos) ||
+    laboratorio.includes(buscaAdminProdutos)
+  );
+});
+
+const produtosPagina = produtosFiltrados.slice(inicio, fim);
 
   if(!confirm("Salvar todas as alterações desta página?")){
     return;
