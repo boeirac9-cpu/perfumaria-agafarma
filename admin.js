@@ -83,6 +83,11 @@ function mostrarAba(aba){
   document.getElementById("abaProdutos").classList.add("escondido");
   document.getElementById("abaCupons").classList.add("escondido");
   document.getElementById("abaControlados").classList.add("escondido");
+ 
+  const abaClientes = document.getElementById("abaClientes");
+if(abaClientes){
+  abaClientes.classList.add("escondido");
+}
 
   const abaCategorias = document.getElementById("abaCategorias");
 
@@ -148,6 +153,11 @@ if(abaCategorias){
   if(aba === "promocoes" && abaPromocoes){
   abaPromocoes.classList.remove("escondido");
   carregarPromocoesAdmin();
+}
+
+if(aba === "clientes" && abaClientes){
+  abaClientes.classList.remove("escondido");
+  carregarClientesAdmin();
 }
 
 }
@@ -2581,6 +2591,65 @@ async function marcarControlados() {
     `✅ ${codigos.length} códigos enviados para marcar como controlado.`;
 
   alert("Produtos marcados como controlados!");
+}
+
+async function carregarClientesAdmin(){
+  const lista = document.getElementById("listaClientes");
+
+  if(!lista){
+    return;
+  }
+
+  lista.innerHTML = "<p class='sem-pedidos'>Carregando clientes...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .order("id", { ascending:false });
+
+  if(error){
+    console.log(error);
+    lista.innerHTML = "<p class='sem-pedidos'>Erro ao carregar clientes.</p>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = "<p class='sem-pedidos'>Nenhum cliente cadastrado.</p>";
+    return;
+  }
+
+  lista.innerHTML = `
+    <p class='sem-pedidos'>
+      Total de clientes cadastrados: <strong>${data.length}</strong>
+    </p>
+  `;
+
+  data.forEach(cliente => {
+    const div = document.createElement("div");
+    div.classList.add("pedido-card");
+
+    const dataCadastro = cliente.criado_em
+      ? new Date(cliente.criado_em).toLocaleString("pt-BR")
+      : "Não informado";
+
+    div.innerHTML = `
+      <h2>Cliente #${cliente.id}</h2>
+
+      <p><strong>Telefone:</strong> ${cliente.telefone || "Não informado"}</p>
+      <p><strong>Data de cadastro:</strong> ${dataCadastro}</p>
+
+      <a
+        href="https://wa.me/55${cliente.telefone}"
+        target="_blank"
+        class="botao confirmar"
+        style="display:inline-block;text-decoration:none;margin-top:10px;"
+      >
+        Chamar no WhatsApp
+      </a>
+    `;
+
+    lista.appendChild(div);
+  });
 }
 
 verificarAdmin();
