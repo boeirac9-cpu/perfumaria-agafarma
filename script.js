@@ -520,6 +520,14 @@ function criarModalLogin(){
           Para finalizar o pedido, informe telefone e senha.
         </p>
 
+        <label>Nome completo</label>
+<input
+  type="text"
+  id="loginNome"
+  placeholder="Digite seu nome"
+  autocomplete="name"
+>
+
         <label>Número de telefone</label>
         <input
           type="text"
@@ -563,6 +571,12 @@ function telefoneValido(telefone){
 async function entrarOuCadastrar(){
   const telefone = document.getElementById("loginTelefone").value.replace(/\D/g, "");
   const senha = document.getElementById("loginSenha").value;
+  const nome = document.getElementById("loginNome").value.trim();
+
+  if(nome === ""){
+  alert("Digite seu nome.");
+  return;
+}
 
   if(!telefoneValido(telefone)){
     alert("Digite um telefone válido.");
@@ -596,7 +610,11 @@ async function entrarOuCadastrar(){
   } else {
     const { data: novoCliente, error: erroCadastro } = await supabaseClient
       .from("clientes")
-      .insert([{ telefone, senha }])
+      .insert([{
+  nome,
+  telefone,
+  senha
+}])
       .select()
       .single();
 

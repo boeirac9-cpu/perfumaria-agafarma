@@ -2634,7 +2634,7 @@ async function carregarClientesAdmin(){
 
     div.innerHTML = `
       <h2>Cliente #${cliente.id}</h2>
-
+      <p><strong>Nome:</strong> ${cliente.nome || "Não informado"}</p>
       <p><strong>Telefone:</strong> ${cliente.telefone || "Não informado"}</p>
       <p><strong>Data de cadastro:</strong> ${dataCadastro}</p>
 
