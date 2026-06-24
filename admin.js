@@ -69,6 +69,7 @@ function abrirPainelAdmin(){
   carregarCategoriasNoProduto();
 
   iniciarImpressaoAutomatica();
+  iniciarVerificacaoPixAdmin();
 }
 
 async function sairAdmin(){
@@ -3046,6 +3047,88 @@ async function importarMedicamentosXLSHTML(){
       <p><strong>Erro no casamento XLS + HTML.</strong></p>
       <p>${erro.message || erro}</p>
     `;
+  }
+}
+
+function iniciarVerificacaoPixAdmin(){
+  verificarPixPendentesAdmin();
+
+  setInterval(async () => {
+    await verificarPixPendentesAdmin();
+  }, 10000);
+}
+
+async function verificarPixPendentesAdmin(){
+  const { data: pedidos, error } = await supabaseClient
+    .from("pedidos")
+    .select("*")
+    .eq("status", "Aguardando pagamento PIX")
+    .not("pix_txid", "is", null)
+    .eq("pix_pago", false);
+
+  if(error){
+    console.log("Erro ao buscar PIX pendentes:", error);
+    return;
+  }
+
+  if(!pedidos || pedidos.length === 0){
+    return;
+  }
+
+  for(const pedido of pedidos){
+    try{
+      const resposta = await fetch(`/api/verificar-pix?txid=${encodeURIComponent(pedido.pix_txid)}`);
+      const dados = await resposta.json();
+
+      console.log("Verificando PIX admin:", pedido.id, dados);
+
+      if(dados.pago){
+        await baixarEstoquePedidoAdmin(pedido);
+
+        await supabaseClient
+          .from("pedidos")
+          .update({
+            status: "Pago",
+            pix_pago: true,
+            pix_pago_em: new Date().toISOString(),
+            estoque_baixado: true
+          })
+          .eq("id", pedido.id);
+
+        console.log("PIX confirmado pelo admin:", pedido.id);
+      }
+
+    }catch(erro){
+      console.log("Erro ao verificar PIX do pedido:", pedido.id, erro);
+    }
+  }
+
+  carregarPedidos();
+}
+
+async function baixarEstoquePedidoAdmin(pedido){
+  if(pedido.estoque_baixado){
+    return;
+  }
+
+  for(const item of pedido.produtos || []){
+    const { data: produtoAtual } = await supabaseClient
+      .from("produtos")
+      .select("quantidade")
+      .eq("id", item.id)
+      .single();
+
+    if(produtoAtual){
+      await supabaseClient
+        .from("produtos")
+        .update({
+          quantidade: Math.max(
+            0,
+            Number(produtoAtual.quantidade || 0) - Number(item.quantidade || 0)
+          )
+        })
+        .eq("id", item.id);
+    }
   }
 }
 
