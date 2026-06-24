@@ -159,7 +159,7 @@ ${
         }
 
         ${
-  produto.indisponivel
+  produto.indisponivel || Number(produto.valor) <= 0
   ? `
     <button class="botao" disabled style="background:#999;cursor:not-allowed;">
       Indisponível
@@ -289,11 +289,6 @@ function adicionarCarrinho(id){
     alert("Produto não encontrado.");
     return;
   }
-
-  if(produto.indisponivel || Number(produto.valor) <= 0){
-  alert("Este produto está indisponível no momento.");
-  return;
-}
 
   if(produto.indisponivel || Number(produto.valor) <= 0){
   alert("Este produto está indisponível no momento.");
@@ -483,7 +478,7 @@ const tipoDesconto = produto.desconto_tipo;
         }
 
         ${
-  produto.indisponivel
+  produto.indisponivel || Number(produto.valor) <= 0
   ? `
     <button class="botao" disabled style="background:#999;cursor:not-allowed;">
       Indisponível
