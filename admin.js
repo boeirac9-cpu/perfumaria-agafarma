@@ -2675,49 +2675,44 @@ async function lerTextoPDF(arquivo){
 
 function extrairPrecosPDF0003(texto){
   const mapaPrecos = {};
-  const linhas = texto.split("\n");
 
-  linhas.forEach(linha => {
-    linha = linha.trim();
+  const regex = /(\d+)\s+(.+?)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\.\/\-\s]+?)\s+(\d{4})\s+(\d+)\s+(\d+,\d{2})/g;
 
-    const match = linha.match(/^(\d+)\s+(.+?)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\.\/\-\s]+)\s+\d{4}\s+\d+\s+(\d+,\d{2})$/);
+  let match;
 
-    if(!match){
-      return;
-    }
-
+  while((match = regex.exec(texto)) !== null){
     const codigo = match[1];
-    const preco = dinheiroParaNumero(match[4]);
+    const preco = dinheiroParaNumero(match[6]);
 
     if(codigo && preco > 0){
       mapaPrecos[codigo] = preco;
     }
-  });
+  }
 
   console.log("PREÇOS PDF LIDOS:", Object.keys(mapaPrecos).length);
+
   return mapaPrecos;
 }
 
 function extrairEstoquePDF0014(texto){
   const produtos = [];
-  const linhas = texto.split("\n");
 
-  linhas.forEach(linha => {
-    linha = linha.trim();
+  const regex = /(\d+)\s+(.+?)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\.\/\-\s]+?)\s+(\d{4})\s+0\s+0\s+0\s+(-?\d+)\s+(-?\d+)/g;
 
-    const match = linha.match(/^(\d+)\s+(.+?)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\.\/\-\s]+)\s+(\d{4})\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)/);
+  let match;
 
-    if(!match){
-      return;
-    }
-
+  while((match = regex.exec(texto)) !== null){
     const codigo = match[1];
     const nome = match[2].trim();
     const laboratorio = match[3].trim();
-    const quantidade = Number(match[8]) || 0;
+    const quantidade = Number(match[6]) || 0;
 
     if(!codigo || !nome || nome.length < 3){
-      return;
+      continue;
+    }
+
+    if(nome.toUpperCase().includes("DESCRI")){
+      continue;
     }
 
     produtos.push({
@@ -2728,9 +2723,10 @@ function extrairEstoquePDF0014(texto){
       quantidade,
       categoria: "medicamentos"
     });
-  });
+  }
 
   console.log("ESTOQUE PDF LIDO:", produtos.length);
+
   return produtos;
 }
 
