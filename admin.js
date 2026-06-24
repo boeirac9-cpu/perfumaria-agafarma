@@ -2861,4 +2861,190 @@ async function importarPDFMedicamentos(){
   }
 }
 
+function lerArquivoTexto(arquivo){
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+
+    leitor.onload = e => resolve(e.target.result);
+    leitor.onerror = reject;
+
+    leitor.readAsText(arquivo, "UTF-8");
+  });
+}
+
+function extrairPrecosHTML0003(html){
+  const mapaPrecos = {};
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const linhas = doc.querySelectorAll("tr");
+
+  linhas.forEach(tr => {
+    const textos = Array.from(tr.querySelectorAll("span"))
+      .map(span => span.innerText.replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+
+    if(textos.length < 6){
+      return;
+    }
+
+    const codigo = textos[0];
+    const precoTexto = textos[textos.length - 1];
+
+    if(!/^\d+$/.test(codigo)){
+      return;
+    }
+
+    if(!/^\d+,\d{2}$/.test(precoTexto)){
+      return;
+    }
+
+    const preco = dinheiroParaNumero(precoTexto);
+
+    if(preco > 0){
+      mapaPrecos[codigo] = preco;
+    }
+  });
+
+  console.log("PREÇOS HTML LIDOS:", Object.keys(mapaPrecos).length);
+  console.log("AMOSTRA PREÇOS HTML:", Object.entries(mapaPrecos).slice(0, 10));
+
+  return mapaPrecos;
+}
+
+async function importarMedicamentosXLSHTML(){
+  const arquivoEstoque = document.getElementById("xlsEstoqueMedicamentos").files[0];
+  const arquivoPrecos = document.getElementById("htmlPrecosMedicamentos").files[0];
+  const resultado = document.getElementById("resultadoImportacao");
+
+  if(!arquivoEstoque || !arquivoPrecos){
+    alert("Selecione o 0014 XLS e o 0003 HTML dos medicamentos.");
+    return;
+  }
+
+  resultado.innerHTML = "<p>Lendo 0014 XLS e 0003 HTML...</p>";
+
+  try{
+    const linhasEstoque = await lerArquivoXLS(arquivoEstoque);
+    const htmlPrecos = await lerArquivoTexto(arquivoPrecos);
+
+    const produtosEstoque = extrairProdutosEstoque0014(linhasEstoque);
+    const mapaPrecos = extrairPrecosHTML0003(htmlPrecos);
+
+    let comPreco = 0;
+    let semPreco = 0;
+    let atualizados = 0;
+    let inseridos = 0;
+    let ignoradosCancelados = 0;
+
+    resultado.innerHTML = `<p>Fazendo casamento de ${produtosEstoque.length} produtos...</p>`;
+
+    for(const produto of produtosEstoque){
+      const precoEncontrado = mapaPrecos[String(produto.codigo)] || 0;
+
+      if(precoEncontrado > 0){
+        comPreco++;
+      } else {
+        semPreco++;
+      }
+
+      const { data: produtoExiste, error: erroBusca } = await supabaseClient
+        .from("produtos")
+        .select("id,cancelado")
+        .eq("codigo", produto.codigo)
+        .maybeSingle();
+
+      if(erroBusca){
+        console.log(erroBusca);
+        continue;
+      }
+
+      if(produtoExiste){
+        if(produtoExiste.cancelado){
+          ignoradosCancelados++;
+          continue;
+        }
+
+        const dadosAtualizacao = {
+          quantidade: produto.quantidade,
+          tipo_produto: "medicamento",
+          categoria: "medicamentos"
+        };
+
+        if(precoEncontrado > 0){
+          dadosAtualizacao.valor = precoEncontrado;
+        }
+
+        const { error } = await supabaseClient
+          .from("produtos")
+          .update(dadosAtualizacao)
+          .eq("codigo", produto.codigo);
+
+        if(!error){
+          atualizados++;
+        } else {
+          console.log(error);
+        }
+
+      } else {
+        const { error } = await supabaseClient
+          .from("produtos")
+          .insert([{
+            codigo: produto.codigo,
+            nome: produto.nome,
+            laboratorio: produto.laboratorio,
+            marca: produto.marca,
+            quantidade: produto.quantidade,
+            valor: precoEncontrado > 0 ? precoEncontrado : 0,
+            desconto_tipo: null,
+            desconto_valor: 0,
+            descricao: "",
+            categoria: "medicamentos",
+            promocao: false,
+            tipo_produto: "medicamento",
+            medicamento_controlado: false,
+            exige_receita: false,
+            imagem: "medicamento-agafarma.png",
+            cancelado: false
+          }]);
+
+        if(!error){
+          inseridos++;
+        } else {
+          console.log(error);
+        }
+      }
+
+      resultado.innerHTML = `
+        <p>Processando medicamentos...</p>
+        <p>Com preço: ${comPreco}</p>
+        <p>Sem preço: ${semPreco}</p>
+        <p>Atualizados: ${atualizados}</p>
+        <p>Inseridos: ${inseridos}</p>
+      `;
+
+      await new Promise(resolve => setTimeout(resolve, 15));
+    }
+
+    resultado.innerHTML = `
+      <p><strong>Casamento concluído!</strong></p>
+      <p>Produtos lidos do 0014 XLS: ${produtosEstoque.length}</p>
+      <p>Preços lidos do 0003 HTML: ${Object.keys(mapaPrecos).length}</p>
+      <p>Produtos com preço encontrado: ${comPreco}</p>
+      <p>Produtos sem preço no HTML: ${semPreco}</p>
+      <p>Atualizados: ${atualizados}</p>
+      <p>Inseridos novos: ${inseridos}</p>
+      <p>Cancelados ignorados: ${ignoradosCancelados}</p>
+    `;
+
+    carregarProdutosAdmin();
+    carregarProdutosSemImagem();
+
+  }catch(erro){
+    console.log(erro);
+    resultado.innerHTML = `
+      <p><strong>Erro no casamento XLS + HTML.</strong></p>
+      <p>${erro.message || erro}</p>
+    `;
+  }
+}
+
 verificarAdmin();
