@@ -290,7 +290,12 @@ function adicionarCarrinho(id){
     return;
   }
 
-  if(produto.indisponivel){
+  if(produto.indisponivel || Number(produto.valor) <= 0){
+  alert("Este produto está indisponível no momento.");
+  return;
+}
+
+  if(produto.indisponivel || Number(produto.valor) <= 0){
   alert("Este produto está indisponível no momento.");
   return;
 }
