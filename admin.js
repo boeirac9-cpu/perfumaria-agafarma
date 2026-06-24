@@ -1556,11 +1556,12 @@ async function importarXLSMedicamentos(){
       }
 
       const dadosAtualizacao = {
-        quantidade: produto.quantidade,
-        valor: precoEncontrado > 0 ? precoEncontrado : 0,
-        tipo_produto: "medicamento",
-        categoria: "medicamentos"
-      };
+  quantidade: produto.quantidade,
+  valor: precoEncontrado > 0 ? precoEncontrado : 0,
+  tipo_produto: "medicamento",
+  categoria: "medicamentos",
+  indisponivel: precoEncontrado <= 0
+};
 
       const dadosNovoProduto = {
         nome: produto.nome,
@@ -1608,13 +1609,14 @@ desconto_valor: 0,
 
       } else {
         const { error } = await supabaseClient
-          .from("produtos")
-          .insert([{
-            codigo: produto.codigo,
-            ...dadosNovoProduto,
-            imagem: "medicamento-agafarma.png",
-cancelado: false
-          }]);
+  .from("produtos")
+  .insert([{
+    codigo: produto.codigo,
+    ...dadosNovoProduto,
+    imagem: "medicamento-agafarma.png",
+    cancelado: false,
+    indisponivel: precoEncontrado <= 0
+  }]);
 
         if(!error){
           inseridos++;
