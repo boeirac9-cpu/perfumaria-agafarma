@@ -426,6 +426,24 @@ async function filtrarCategoria(categoria){
   produtos = data || [];
   listaProdutos.innerHTML = "";
 
+  if (
+  categoria === "infantil" ||
+  categoria === "higiene" ||
+  categoria === "cabelo" ||
+  categoria === "corpo"
+) {
+  produtos.sort((a, b) => {
+
+    const aCaixinha = a.imagem === "medicamento-agafarma.png";
+    const bCaixinha = b.imagem === "medicamento-agafarma.png";
+
+    if (aCaixinha && !bCaixinha) return 1;
+    if (!aCaixinha && bCaixinha) return -1;
+
+    return 0;
+  });
+}
+
   if(produtos.length === 0){
     listaProdutos.innerHTML = "<p class='sem-pedidos'>Nenhum produto nesta categoria.</p>";
     fecharMenu();
