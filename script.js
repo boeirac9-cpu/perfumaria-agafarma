@@ -158,9 +158,19 @@ ${
           `
         }
 
-        <button class="botao" onclick="adicionarCarrinho(${produto.id})">
-          Adicionar ao carrinho
-        </button>
+        ${
+  produto.indisponivel
+  ? `
+    <button class="botao" disabled style="background:#999;cursor:not-allowed;">
+      Indisponível
+    </button>
+  `
+  : `
+    <button class="botao" onclick="adicionarCarrinho(${produto.id})">
+      Adicionar ao carrinho
+    </button>
+  `
+}
       </div>
     `;
 
@@ -279,6 +289,11 @@ function adicionarCarrinho(id){
     alert("Produto não encontrado.");
     return;
   }
+
+  if(produto.indisponivel){
+  alert("Este produto está indisponível no momento.");
+  return;
+}
 
   if(Number(produto.quantidade) <= 0){
     alert("Produto sem estoque.");
@@ -462,9 +477,19 @@ const tipoDesconto = produto.desconto_tipo;
           `
         }
 
-        <button class="botao" onclick="adicionarCarrinho(${produto.id})">
-          Adicionar ao carrinho
-        </button>
+        ${
+  produto.indisponivel
+  ? `
+    <button class="botao" disabled style="background:#999;cursor:not-allowed;">
+      Indisponível
+    </button>
+  `
+  : `
+    <button class="botao" onclick="adicionarCarrinho(${produto.id})">
+      Adicionar ao carrinho
+    </button>
+  `
+}
       </div>
     `;
 
