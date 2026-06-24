@@ -2652,4 +2652,217 @@ async function carregarClientesAdmin(){
   });
 }
 
+async function lerTextoPDF(arquivo){
+  const buffer = await arquivo.arrayBuffer();
+
+  const pdf = await pdfjsLib.getDocument({
+    data: buffer
+  }).promise;
+
+  let texto = "";
+
+  for(let i = 1; i <= pdf.numPages; i++){
+    const pagina = await pdf.getPage(i);
+    const conteudo = await pagina.getTextContent();
+
+    texto += conteudo.items
+      .map(item => item.str)
+      .join(" ") + "\n";
+  }
+
+  return texto;
+}
+
+function extrairPrecosPDF0003(texto){
+  const mapaPrecos = {};
+  const linhas = texto.split("\n");
+
+  linhas.forEach(linha => {
+    linha = linha.trim();
+
+    const match = linha.match(/^(\d+)\s+(.+?)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\.\/\-\s]+)\s+\d{4}\s+\d+\s+(\d+,\d{2})$/);
+
+    if(!match){
+      return;
+    }
+
+    const codigo = match[1];
+    const preco = dinheiroParaNumero(match[4]);
+
+    if(codigo && preco > 0){
+      mapaPrecos[codigo] = preco;
+    }
+  });
+
+  console.log("PREÇOS PDF LIDOS:", Object.keys(mapaPrecos).length);
+  return mapaPrecos;
+}
+
+function extrairEstoquePDF0014(texto){
+  const produtos = [];
+  const linhas = texto.split("\n");
+
+  linhas.forEach(linha => {
+    linha = linha.trim();
+
+    const match = linha.match(/^(\d+)\s+(.+?)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\.\/\-\s]+)\s+(\d{4})\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)/);
+
+    if(!match){
+      return;
+    }
+
+    const codigo = match[1];
+    const nome = match[2].trim();
+    const laboratorio = match[3].trim();
+    const quantidade = Number(match[8]) || 0;
+
+    if(!codigo || !nome || nome.length < 3){
+      return;
+    }
+
+    produtos.push({
+      codigo,
+      nome,
+      laboratorio,
+      marca: laboratorio,
+      quantidade,
+      categoria: "medicamentos"
+    });
+  });
+
+  console.log("ESTOQUE PDF LIDO:", produtos.length);
+  return produtos;
+}
+
+async function importarPDFMedicamentos(){
+  const arquivoEstoque = document.getElementById("pdfEstoqueMedicamentos").files[0];
+  const arquivoPrecos = document.getElementById("pdfPrecosMedicamentos").files[0];
+  const resultado = document.getElementById("resultadoImportacao");
+
+  if(!arquivoEstoque || !arquivoPrecos){
+    alert("Selecione o PDF 0014 e o PDF 0003 dos medicamentos.");
+    return;
+  }
+
+  resultado.innerHTML = "<p>Lendo PDFs dos medicamentos...</p>";
+
+  try{
+    const textoEstoque = await lerTextoPDF(arquivoEstoque);
+    const textoPrecos = await lerTextoPDF(arquivoPrecos);
+
+    const produtosEstoque = extrairEstoquePDF0014(textoEstoque);
+    const mapaPrecos = extrairPrecosPDF0003(textoPrecos);
+
+    let comPreco = 0;
+    let semPreco = 0;
+    let atualizados = 0;
+    let inseridos = 0;
+    let ignoradosCancelados = 0;
+
+    resultado.innerHTML = `<p>Atualizando ${produtosEstoque.length} medicamentos...</p>`;
+
+    for(const produto of produtosEstoque){
+      const precoEncontrado = mapaPrecos[produto.codigo] || 0;
+
+      if(precoEncontrado > 0){
+        comPreco++;
+      } else {
+        semPreco++;
+      }
+
+      const { data: produtoExiste, error: erroBusca } = await supabaseClient
+        .from("produtos")
+        .select("id,cancelado,promocao,desconto_tipo,desconto_valor,imagem")
+        .eq("codigo", produto.codigo)
+        .maybeSingle();
+
+      if(erroBusca){
+        console.log(erroBusca);
+        continue;
+      }
+
+      if(produtoExiste){
+        if(produtoExiste.cancelado){
+          ignoradosCancelados++;
+          continue;
+        }
+
+        const { error } = await supabaseClient
+          .from("produtos")
+          .update({
+            quantidade: produto.quantidade,
+            valor: precoEncontrado > 0 ? precoEncontrado : 0,
+            tipo_produto: "medicamento",
+            categoria: "medicamentos"
+          })
+          .eq("codigo", produto.codigo);
+
+        if(!error){
+          atualizados++;
+        } else {
+          console.log(error);
+        }
+
+      } else {
+        const { error } = await supabaseClient
+          .from("produtos")
+          .insert([{
+            codigo: produto.codigo,
+            nome: produto.nome,
+            laboratorio: produto.laboratorio,
+            marca: produto.marca,
+            quantidade: produto.quantidade,
+            valor: precoEncontrado > 0 ? precoEncontrado : 0,
+            desconto_tipo: null,
+            desconto_valor: 0,
+            descricao: "",
+            categoria: "medicamentos",
+            promocao: false,
+            tipo_produto: "medicamento",
+            medicamento_controlado: false,
+            exige_receita: false,
+            imagem: "medicamento-agafarma.png",
+            cancelado: false
+          }]);
+
+        if(!error){
+          inseridos++;
+        } else {
+          console.log(error);
+        }
+      }
+
+      resultado.innerHTML = `
+        <p>Processando medicamentos...</p>
+        <p>Atualizados: ${atualizados}</p>
+        <p>Inseridos novos: ${inseridos}</p>
+        <p>Sem preço: ${semPreco}</p>
+      `;
+
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+
+    resultado.innerHTML = `
+      <p><strong>Importação PDF de medicamentos concluída!</strong></p>
+      <p>Produtos do 0014 PDF: ${produtosEstoque.length}</p>
+      <p>Preços encontrados no 0003 PDF: ${comPreco}</p>
+      <p>Sem preço: ${semPreco}</p>
+      <p>Medicamentos atualizados: ${atualizados}</p>
+      <p>Medicamentos novos inseridos: ${inseridos}</p>
+      <p>Cancelados ignorados: ${ignoradosCancelados}</p>
+    `;
+
+    carregarProdutosAdmin();
+    carregarProdutosSemImagem();
+
+  }catch(erro){
+    console.log(erro);
+
+    resultado.innerHTML = `
+      <p><strong>Erro ao importar PDFs.</strong></p>
+      <p>${erro.message || erro}</p>
+    `;
+  }
+}
+
 verificarAdmin();
