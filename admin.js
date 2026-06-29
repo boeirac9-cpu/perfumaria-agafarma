@@ -790,46 +790,39 @@ function converterImagemParaBase64(arquivo){
 }
 
 async function editarProduto(id){
-  const nome = document.getElementById(`editNome${id}`).value.trim();
-  const categoria = document.getElementById(`editCategoria${id}`).value;
-  const controlado = document.getElementById(`editControlado${id}`).checked;
-  const arquivoImagem = document.getElementById(`editImagem${id}`).files[0];
-
-  if(nome === ""){
-    alert("Digite o nome do produto.");
-    return;
-  }
-
-  const dadosAtualizacao = {
-    nome,
-    categoria,
-    medicamento_controlado: controlado,
-    exige_receita: controlado
-  };
-
-  if(arquivoImagem){
-    dadosAtualizacao.imagem = await converterImagemParaBase64(arquivoImagem);
-  }
-
-  const { error } = await supabaseClient
+  const { data: produto, error } = await supabaseClient
     .from("produtos")
-    .update(dadosAtualizacao)
-    .eq("id", id);
+    .select("*")
+    .eq("id", id)
+    .single();
 
-
-
-    if(error){
+  if(error || !produto){
     console.log(error);
-    alert("Erro ao editar produto.");
+    alert("Erro ao buscar produto.");
     return;
   }
 
-  alert("Produto atualizado!");
+  produtoEditandoId = id;
 
-  const botao = document.activeElement;
-  if(botao){
-    botao.innerText = "✅ Salvo";
-  }
+  document.getElementById("produtoCodigoBarras").value = produto.codigo || "";
+  document.getElementById("produtoNome").value = produto.nome || "";
+  document.getElementById("produtoMarca").value = produto.marca || "";
+  document.getElementById("produtoLaboratorio").value = produto.laboratorio || "";
+  document.getElementById("produtoDescricao").value = produto.descricao || "";
+  document.getElementById("produtoValor").value = produto.valor || "";
+  document.getElementById("produtoDescontoTipo").value = produto.desconto_tipo || "";
+  document.getElementById("produtoDescontoValor").value = produto.desconto_valor || "";
+  document.getElementById("produtoQuantidade").value = produto.quantidade || "";
+  document.getElementById("produtoCategoria").value = produto.categoria || "";
+  document.getElementById("previewImagem").src = produto.imagem || "";
+  document.getElementById("produtoControlado").checked = produto.medicamento_controlado || false;
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  alert("Produto carregado para edição. Agora clique em Salvar Produto.");
 }
 
 
