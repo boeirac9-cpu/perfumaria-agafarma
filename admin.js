@@ -816,15 +816,22 @@ async function editarProduto(id){
     .update(dadosAtualizacao)
     .eq("id", id);
 
-  if(error){
+
+
+    if(error){
     console.log(error);
     alert("Erro ao editar produto.");
     return;
   }
 
   alert("Produto atualizado!");
-  carregarProdutosAdmin();
+
+  const botao = document.activeElement;
+  if(botao){
+    botao.innerText = "✅ Salvo";
+  }
 }
+
 
 async function excluirProduto(id){
   if(!confirm("Deseja cancelar este produto? Ele não aparecerá mais no site e não voltará ao importar XLS.")){
