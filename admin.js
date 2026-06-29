@@ -789,6 +789,43 @@ function converterImagemParaBase64(arquivo){
   });
 }
 
+async function editarProduto(id){
+  const nome = document.getElementById(`editNome${id}`).value.trim();
+  const categoria = document.getElementById(`editCategoria${id}`).value;
+  const controlado = document.getElementById(`editControlado${id}`).checked;
+  const arquivoImagem = document.getElementById(`editImagem${id}`).files[0];
+
+  if(nome === ""){
+    alert("Digite o nome do produto.");
+    return;
+  }
+
+  const dadosAtualizacao = {
+    nome,
+    categoria,
+    medicamento_controlado: controlado,
+    exige_receita: controlado
+  };
+
+  if(arquivoImagem){
+    dadosAtualizacao.imagem = await converterImagemParaBase64(arquivoImagem);
+  }
+
+  const { error } = await supabaseClient
+    .from("produtos")
+    .update(dadosAtualizacao)
+    .eq("id", id);
+
+  if(error){
+    console.log(error);
+    alert("Erro ao editar produto.");
+    return;
+  }
+
+  alert("Produto atualizado!");
+  carregarProdutosAdmin();
+}
+
 async function excluirProduto(id){
   if(!confirm("Deseja cancelar este produto? Ele não aparecerá mais no site e não voltará ao importar XLS.")){
     return;
